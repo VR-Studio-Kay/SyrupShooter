@@ -438,7 +438,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a24be4b5ebfe5f4d8ed1de9b25cb7aa, type: 3}
   m_Name: HandCommonPosesInteraction Standalone
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: Hand Interaction Poses
   version: 0.0.1
   featureIdInternal: com.unity.openxr.feature.input.handinteractionposes
@@ -617,8 +617,6 @@ MonoBehaviour:
   m_Name: Standalone
   m_EditorClassIdentifier: 
   features:
-  - {fileID: -1285274085719655088}
-  - {fileID: 7038195013835188727}
   - {fileID: -5237683296074310811}
   - {fileID: 4319405883412293882}
   - {fileID: -6500371903721893921}
@@ -628,6 +626,7 @@ MonoBehaviour:
   - {fileID: 44155882599985809}
   - {fileID: 8783314164287198737}
   - {fileID: -2671734370756535410}
+  - {fileID: -1285274085719655088}
   - {fileID: -946551530703983165}
   - {fileID: -8957711071248058206}
   - {fileID: -8784738127811119377}
@@ -638,6 +637,7 @@ MonoBehaviour:
   - {fileID: -4905793993742051674}
   - {fileID: -4211763130359057979}
   - {fileID: 7654736455110000865}
+  - {fileID: 7038195013835188727}
   m_renderMode: 1
   m_autoColorSubmissionMode: 1
   m_colorSubmissionModes:
@@ -875,7 +875,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e314dfef9af0904e80129bcc0a79361, type: 3}
   m_Name: HandTracking Standalone
   m_EditorClassIdentifier: 
-  m_enabled: 0
+  m_enabled: 1
   nameUi: Hand Tracking Subsystem
   version: 0.0.1
   featureIdInternal: com.unity.openxr.feature.input.handtracking
