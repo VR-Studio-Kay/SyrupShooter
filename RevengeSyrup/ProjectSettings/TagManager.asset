@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Right Hand
   - Left Hand
+  - WhatIsGround
   layers:
   - Default
   - TransparentFX
@@ -16,12 +17,12 @@ TagManager:
   - 
   - 
   - MuseTextureLayer
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - WhatIsGround
+  - WhatIsWall
+  - WhatIsLadder
+  - WhatIsEnemy
+  - WhatIsBullet
+  - WhatIsPlayer
   - 
   - 
   - 
