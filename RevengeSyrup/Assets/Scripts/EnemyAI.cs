@@ -5,34 +5,33 @@ using UnityEngine.AI;
 
 public class EnemyAiTutorial : MonoBehaviour
 {
+    [Header("Combat Settings")]
     [SerializeField] private GameObject projectile;
     [SerializeField] private Transform spawnPoint;
-
     [SerializeField] private float attackRange = 2f;
     [SerializeField] private float sightRange = 5f;
     [SerializeField] private float walkPointRange = 5f;
 
+    [Header("Health Settings")]
+    [SerializeField] private int health = 100;
+    private int maxHealth;
+    [SerializeField] private EnemyHealthBar healthBar;
+
+    [Header("AI")]
     private NavMeshAgent agent;
     private Transform player;
-
     private Vector3 walkPoint;
     private bool walkPointSet;
     private bool alreadyAttacked;
-
-    private int health = 5;
     private LayerMask whatIsGround;
 
+    [Header("Visual Feedback")]
     private Renderer enemyRenderer;
-    private Color originalColor;
-
-    private Rigidbody[] ragdollBodies;
-    private Collider[] ragdollColliders;
-    private Animator animator;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        animator = GetComponent<Animator>();
+        enemyRenderer = GetComponent<Renderer>();
 
         GameObject playerObj = GameObject.FindGameObjectWithTag("Origin");
         if (playerObj != null)
@@ -46,26 +45,11 @@ public class EnemyAiTutorial : MonoBehaviour
 
         whatIsGround = LayerMask.GetMask("Ground");
 
-        enemyRenderer = GetComponent<Renderer>();
-        if (enemyRenderer != null)
-        {
-            originalColor = enemyRenderer.material.color;
-        }
+        maxHealth = health;
 
-        // Setup ragdoll
-        ragdollBodies = GetComponentsInChildren<Rigidbody>();
-        ragdollColliders = GetComponentsInChildren<Collider>();
-
-        foreach (var rb in ragdollBodies)
+        if (healthBar != null)
         {
-            if (rb != GetComponent<Rigidbody>())
-                rb.isKinematic = true;
-        }
-
-        foreach (var col in ragdollColliders)
-        {
-            if (col != GetComponent<Collider>())
-                col.enabled = false;
+            healthBar.SetMaxHealth(maxHealth);
         }
 
         SearchWalkPoint();
@@ -79,7 +63,6 @@ public class EnemyAiTutorial : MonoBehaviour
 
             if (distanceToPlayer < sightRange)
             {
-                Debug.Log("Chasing player...");
                 ChasePlayer();
             }
             else
@@ -109,7 +92,6 @@ public class EnemyAiTutorial : MonoBehaviour
         else
         {
             agent.SetDestination(walkPoint);
-            Debug.Log("Patrolling to: " + walkPoint);
 
             if (Vector3.Distance(transform.position, walkPoint) < 1f)
             {
@@ -128,11 +110,6 @@ public class EnemyAiTutorial : MonoBehaviour
         if (Physics.Raycast(walkPoint, -transform.up, 2f, whatIsGround))
         {
             walkPointSet = true;
-            Debug.Log("Found new walk point: " + walkPoint);
-        }
-        else
-        {
-            Debug.Log("Raycast miss: walk point not on ground");
         }
     }
 
@@ -152,9 +129,11 @@ public class EnemyAiTutorial : MonoBehaviour
         rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
 
         if (player.position.y > transform.position.y)
+        {
             rb.AddForce(transform.up * 8f, ForceMode.Impulse);
+        }
 
-        Destroy(spawnedBullet, 5);
+        Destroy(spawnedBullet, 5f);
     }
 
     void ResetAttack()
@@ -167,41 +146,31 @@ public class EnemyAiTutorial : MonoBehaviour
         health -= damage;
         ChangeColor(Color.yellow);
 
-        if (health <= 0) DestroyEnemy();
+        if (healthBar != null)
+        {
+            healthBar.SetHealth(health);
+        }
+
+        if (health <= 0)
+        {
+            DestroyEnemy();
+        }
     }
 
     void DestroyEnemy()
     {
-        // Disable AI components
         if (agent != null) agent.enabled = false;
-        if (animator != null) animator.enabled = false;
-
-        // Enable ragdoll physics
-        foreach (var rb in ragdollBodies)
-        {
-            if (rb != GetComponent<Rigidbody>())
-                rb.isKinematic = false;
-        }
-
-        foreach (var col in ragdollColliders)
-        {
-            if (col != GetComponent<Collider>())
-                col.enabled = true;
-        }
-
-        // Disable main collider to avoid physics issues
         Collider mainCollider = GetComponent<Collider>();
         if (mainCollider != null) mainCollider.enabled = false;
 
-        // Optional: destroy after time
-        Destroy(gameObject, 10f);
+        Destroy(gameObject, 2f);
     }
 
-    public void ChangeColor(Color color)
+    public void ChangeColor(Color newColor)
     {
         if (enemyRenderer != null)
         {
-            enemyRenderer.material.color = color;
+            enemyRenderer.material.color = newColor;
             Invoke(nameof(ResetColor), 0.2f);
         }
     }
@@ -210,7 +179,7 @@ public class EnemyAiTutorial : MonoBehaviour
     {
         if (enemyRenderer != null)
         {
-            enemyRenderer.material.color = originalColor;
+            enemyRenderer.material.color = Color.red;
         }
     }
 

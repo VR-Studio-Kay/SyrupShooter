@@ -8,50 +8,47 @@ public class Bullet : MonoBehaviour
     public bool destroyOnImpact = true;
 
     [Header("Target Filtering")]
-    public LayerMask WhatIsEnemy; // <-- updated name
+    public LayerMask WhatIsEnemy;
 
     [Header("Effects")]
-    public GameObject impactEffect; // Optional particle/sound effect prefab
+    public GameObject impactEffect;
     public AudioClip hitSound;
 
-
     private AudioSource audioSource;
+    private bool hasImpacted = false;
 
     private void Start()
     {
-        Destroy(gameObject, lifetime); // Auto-cleanup
         audioSource = GetComponent<AudioSource>();
+
+        // Only auto-destroy if not destroyOnImpact
+        if (!destroyOnImpact)
+            Destroy(gameObject, lifetime);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Check if bullet hit something in the valid layer
+        if (hasImpacted) return; // Prevent multiple triggers
         if (((1 << other.gameObject.layer) & WhatIsEnemy) == 0)
             return;
 
-        // Enemy hit?
         EnemyAiTutorial enemy = other.GetComponent<EnemyAiTutorial>();
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
-            enemy.ChangeColor(Color.yellow); // Flash color for feedback
+            enemy.ChangeColor(Color.yellow);
         }
 
-        // Optional impact effect
         if (impactEffect != null)
-        {
             Instantiate(impactEffect, transform.position, Quaternion.identity);
-        }
 
-        // Optional hit sound
         if (hitSound != null && audioSource != null)
-        {
             audioSource.PlayOneShot(hitSound);
-        }
 
         if (destroyOnImpact)
         {
-            Destroy(gameObject);
+            hasImpacted = true;
+            Destroy(gameObject, 5f); // Delay destruction by 5 seconds
         }
     }
 }
