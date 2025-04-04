@@ -9,6 +9,18 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 02bde6ff21827ef4bbda08d82a6a8875, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.3977
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02bde6ff21827ef4bbda08d82a6a8875, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.3977
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02bde6ff21827ef4bbda08d82a6a8875, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.3977
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 02bde6ff21827ef4bbda08d82a6a8875, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.0008947046
       objectReference: {fileID: 0}
@@ -137,3 +149,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damage: 10
   lifetime: 5
+  destroyOnImpact: 1
+  impactEffect: {fileID: 2955623459812423943, guid: f5507a8c6a22c404ab324980c4e8a11b, type: 3}
+  hitSound: {fileID: 0}
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 0

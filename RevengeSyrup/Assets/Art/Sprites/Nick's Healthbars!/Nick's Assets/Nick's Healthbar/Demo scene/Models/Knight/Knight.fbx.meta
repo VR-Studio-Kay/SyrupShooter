@@ -1,0 +1,181 @@
+fileFormatVersion: 2
+guid: 352b367088cf9114a85afee087bcba65
+ModelImporter:
+  serializedVersion: 21300
+  internalIDToNameTable:
+  - first:
+      74: 5976648963912442444
+    second: knight_2_weapon_attack_seq
+  - first:
+      74: 4263507802071888517
+    second: Rig|default
+  - first:
+      74: 3137324855924899373
+    second: Rig|knight_attack_2_heavy_weapon
+  - first:
+      74: 5881468113933318301
+    second: Rig|knight_attack_3_heavy_weapon
+  - first:
+      74: -8960288714043548078
+    second: Rig|knight_block_2_weapon
+  - first:
+      74: -4772423586654849224
+    second: Rig|knight_front_attacked_fall
+  - first:
+      74: 7259345099129630781
+    second: Rig|knight_hurt_left
+  - first:
+      74: 6485364344297762621
+    second: Rig|knight_idle
+  - first:
+      74: 2447158422557194801
+    second: Rig|knight_idle_2_weapon
+  - first:
+      74: -2602664623462389259
+    second: Rig|knight_idle_heavy_weapon
+  - first:
+      74: 6783081829152217523
+    second: Rig|knight_jump_up_root
+  - first:
+      74: -1436141994728180922
+    second: Rig|knight_left_attacked_fall
+  - first:
+      74: 355713073187350065
+    second: Rig|knight_right_attacked_fall
+  - first:
+      74: -5406083266227243899
+    second: Rig|knight_run_heavy_weapon_in_place
+  - first:
+      74: 265782098047994922
+    second: Rig|knight_run_shield
+  - first:
+      74: 4955352458317709938
+    second: Rig|knight_shield_attack
+  - first:
+      74: -349613024298140972
+    second: Rig|knight_shield_block
+  - first:
+      74: 7999366923802059674
+    second: Rig|knight_standard
+  - first:
+      74: -7610081803828557649
+    second: Rig|knight_turn_right_heavy_weapon
+  - first:
+      74: 4205586662835811374
+    second: Rig|knight_walk_2_root
+  - first:
+      74: -3651178425494967466
+    second: Rig|knight_walk_heavy_weapon_root
+  - first:
+      74: -1523021702078091854
+    second: Rig|knight_walk_in_place
+  - first:
+      74: -6761866332336547887
+    second: Rig|knight_walk_root_left
+  - first:
+      74: -3362301017016444871
+    second: Rig|knight_walk_shieldblock_root
+  - first:
+      74: -59857792252789105
+    second: Rig|two_weapon_tornado
+  externalObjects: {}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 1
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
