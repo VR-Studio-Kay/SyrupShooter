@@ -25,88 +25,135 @@ public class EnemyAiTutorial : MonoBehaviour
     private Renderer enemyRenderer;
     private Color originalColor;
 
+    private Rigidbody[] ragdollBodies;
+    private Collider[] ragdollColliders;
+    private Animator animator;
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        player = GameObject.FindGameObjectWithTag("Origin").transform;
+        animator = GetComponent<Animator>();
+
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Origin");
+        if (playerObj != null)
+        {
+            player = playerObj.transform;
+        }
+        else
+        {
+            Debug.LogWarning("Player with tag 'Origin' not found. Enemy will not chase.");
+        }
+
         whatIsGround = LayerMask.GetMask("Ground");
 
-        // Get the Renderer and store the original color
         enemyRenderer = GetComponent<Renderer>();
         if (enemyRenderer != null)
         {
             originalColor = enemyRenderer.material.color;
         }
+
+        // Setup ragdoll
+        ragdollBodies = GetComponentsInChildren<Rigidbody>();
+        ragdollColliders = GetComponentsInChildren<Collider>();
+
+        foreach (var rb in ragdollBodies)
+        {
+            if (rb != GetComponent<Rigidbody>())
+                rb.isKinematic = true;
+        }
+
+        foreach (var col in ragdollColliders)
+        {
+            if (col != GetComponent<Collider>())
+                col.enabled = false;
+        }
+
+        SearchWalkPoint();
     }
 
     void Update()
     {
-        //Check if the enemy is close enough to the player to start chasing
-        if (Vector3.Distance(transform.position, player.position) < sightRange && walkPointSet == false)
+        if (player != null)
         {
-            ChasePlayer();
-        }
-        //Check if the enemy is not close enough to the player and should wander
-        else if (walkPointSet == false)
-        {
-            if (Vector3.Distance(transform.position, walkPoint) < 1f)
-                SearchWalkPoint();
-            else
-                WalkToWalkPoint();
-        }
+            float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        //Check if the enemy is close enough to the player to attack
-        if (Vector3.Distance(transform.position, player.position) < attackRange && !alreadyAttacked)
+            if (distanceToPlayer < sightRange)
+            {
+                Debug.Log("Chasing player...");
+                ChasePlayer();
+            }
+            else
+            {
+                Patrol();
+            }
+
+            if (distanceToPlayer < attackRange && !alreadyAttacked)
+            {
+                alreadyAttacked = true;
+                FireBullet();
+                Invoke(nameof(ResetAttack), 1f);
+            }
+        }
+        else
         {
-            alreadyAttacked = true;
-            FireBullet();
-            Invoke(nameof(ResetAttack), 1f);
+            Patrol();
         }
     }
 
-    void WalkToWalkPoint()
+    void Patrol()
     {
-        agent.SetDestination(walkPoint);
+        if (!walkPointSet)
+        {
+            SearchWalkPoint();
+        }
+        else
+        {
+            agent.SetDestination(walkPoint);
+            Debug.Log("Patrolling to: " + walkPoint);
 
-        //Calculate the distance to the walk point
-        Vector3 distanceToWalkPoint = transform.position - walkPoint;
-
-        //Walkpoint reached
-        if (distanceToWalkPoint.magnitude < 1f)
-            walkPointSet = false;
+            if (Vector3.Distance(transform.position, walkPoint) < 1f)
+            {
+                walkPointSet = false;
+            }
+        }
     }
 
     void SearchWalkPoint()
     {
-        //Calculate random point in range
-        float randomZ = UnityEngine.Random.Range(-walkPointRange, walkPointRange);
-        float randomX = UnityEngine.Random.Range(-walkPointRange, walkPointRange);
+        float randomZ = Random.Range(-walkPointRange, walkPointRange);
+        float randomX = Random.Range(-walkPointRange, walkPointRange);
 
         walkPoint = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
 
         if (Physics.Raycast(walkPoint, -transform.up, 2f, whatIsGround))
+        {
             walkPointSet = true;
+            Debug.Log("Found new walk point: " + walkPoint);
+        }
+        else
+        {
+            Debug.Log("Raycast miss: walk point not on ground");
+        }
     }
 
     void ChasePlayer()
     {
-        agent.SetDestination(player.position);
+        if (player != null)
+        {
+            agent.SetDestination(player.position);
+        }
     }
 
     void FireBullet()
     {
-        //Create a new instance of the bullet
         GameObject spawnedBullet = Instantiate(projectile);
-        //Get the Rigidbody component from the spawned bullet
         Rigidbody rb = spawnedBullet.GetComponent<Rigidbody>();
-        //Set the position of the bullet
         rb.position = spawnPoint.position;
-        //Add a force to the bullet in the forward direction
         rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
 
-        // Add an upward force to the bullet if player is above the AI
         if (player.position.y > transform.position.y)
             rb.AddForce(transform.up * 8f, ForceMode.Impulse);
+
         Destroy(spawnedBullet, 5);
     }
 
@@ -118,14 +165,36 @@ public class EnemyAiTutorial : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
-        ChangeColor(Color.yellow); // Flash the enemy when hit
+        ChangeColor(Color.yellow);
 
         if (health <= 0) DestroyEnemy();
     }
 
     void DestroyEnemy()
     {
-        Destroy(gameObject);
+        // Disable AI components
+        if (agent != null) agent.enabled = false;
+        if (animator != null) animator.enabled = false;
+
+        // Enable ragdoll physics
+        foreach (var rb in ragdollBodies)
+        {
+            if (rb != GetComponent<Rigidbody>())
+                rb.isKinematic = false;
+        }
+
+        foreach (var col in ragdollColliders)
+        {
+            if (col != GetComponent<Collider>())
+                col.enabled = true;
+        }
+
+        // Disable main collider to avoid physics issues
+        Collider mainCollider = GetComponent<Collider>();
+        if (mainCollider != null) mainCollider.enabled = false;
+
+        // Optional: destroy after time
+        Destroy(gameObject, 10f);
     }
 
     public void ChangeColor(Color color)
@@ -133,7 +202,7 @@ public class EnemyAiTutorial : MonoBehaviour
         if (enemyRenderer != null)
         {
             enemyRenderer.material.color = color;
-            Invoke(nameof(ResetColor), 0.2f); // Revert color after 0.2 seconds
+            Invoke(nameof(ResetColor), 0.2f);
         }
     }
 
