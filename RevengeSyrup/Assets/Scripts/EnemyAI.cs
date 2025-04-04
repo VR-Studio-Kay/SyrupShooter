@@ -115,4 +115,23 @@ public class EnemyAiTutorial : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, sightRange);
     }
+
+    public void ChangeColor(Color newColor)
+    {
+        Renderer renderer = GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.material.color = newColor;
+            Invoke(nameof(ResetColor), 0.2f); // Reset color after 0.5 seconds
+        }
+    }
+
+    private void ResetColor()
+    {
+        Renderer renderer = GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.material.color = Color.red; // Change back to default (white)
+        }
+    }
 }
