@@ -8,6 +8,7 @@ TagManager:
   - Left Hand
   - WhatIsGround
   - Enemy
+  - Origin
   layers:
   - Default
   - TransparentFX

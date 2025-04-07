@@ -61,25 +61,34 @@ public class EnemyAiTutorial : MonoBehaviour
         {
             float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
+            // If within sight range, start chasing
             if (distanceToPlayer < sightRange)
             {
                 ChasePlayer();
+
+                // If within attack range, fire
+                if (distanceToPlayer < attackRange && !alreadyAttacked)
+                {
+                    Debug.Log("Enemy within attack range. Firing projectile."); // Debug log
+                    alreadyAttacked = true;
+                    FireBullet();
+                    Invoke(nameof(ResetAttack), 1f); // Reset attack after 1 second
+                }
             }
             else
             {
-                Patrol();
-            }
-
-            if (distanceToPlayer < attackRange && !alreadyAttacked)
-            {
-                alreadyAttacked = true;
-                FireBullet();
-                Invoke(nameof(ResetAttack), 1f);
+                Patrol(); // Patrol if not in sight range
             }
         }
         else
         {
-            Patrol();
+            Patrol(); // Patrol if no player detected
+        }
+
+        // Always face the player if within sight range
+        if (player != null && Vector3.Distance(transform.position, player.position) < sightRange)
+        {
+            LookAtPlayer();
         }
     }
 
@@ -117,23 +126,37 @@ public class EnemyAiTutorial : MonoBehaviour
     {
         if (player != null)
         {
-            agent.SetDestination(player.position);
+            agent.SetDestination(player.position); // Move towards the player
         }
     }
 
     void FireBullet()
     {
-        GameObject spawnedBullet = Instantiate(projectile);
-        Rigidbody rb = spawnedBullet.GetComponent<Rigidbody>();
-        rb.position = spawnPoint.position;
-        rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
-
-        if (player.position.y > transform.position.y)
+        if (projectile == null || spawnPoint == null)
         {
-            rb.AddForce(transform.up * 8f, ForceMode.Impulse);
+            Debug.LogError("Projectile or spawn point is not assigned.");
+            return;
         }
 
-        Destroy(spawnedBullet, 5f);
+        Debug.Log("Firing Bullet."); // Debug log
+
+        GameObject spawnedBullet = Instantiate(projectile, spawnPoint.position, Quaternion.identity);
+        Rigidbody rb = spawnedBullet.GetComponent<Rigidbody>();
+
+        if (rb != null)
+        {
+            rb.AddForce(transform.forward * 32f, ForceMode.Impulse); // Forward force
+            if (player.position.y > transform.position.y)
+            {
+                rb.AddForce(transform.up * 8f, ForceMode.Impulse); // Vertical force if player is above
+            }
+        }
+        else
+        {
+            Debug.LogError("Projectile does not have a Rigidbody attached.");
+        }
+
+        Destroy(spawnedBullet, 5f); // Destroy bullet after 5 seconds
     }
 
     void ResetAttack()
@@ -183,6 +206,14 @@ public class EnemyAiTutorial : MonoBehaviour
         }
     }
 
+    void LookAtPlayer()
+    {
+        // Smoothly rotate the enemy to face the player
+        Vector3 direction = (player.position - transform.position).normalized;
+        Quaternion lookRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f); // Smooth rotation
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -191,4 +222,3 @@ public class EnemyAiTutorial : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, sightRange);
     }
 }
- 
