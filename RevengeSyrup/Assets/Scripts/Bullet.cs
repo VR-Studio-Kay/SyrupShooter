@@ -1,5 +1,7 @@
 using UnityEngine;
+using System.Collections;
 
+[RequireComponent(typeof(AudioSource))]
 public class Bullet : MonoBehaviour
 {
     [Header("Stats")]
@@ -7,7 +9,11 @@ public class Bullet : MonoBehaviour
     public float lifetime = 5f;
     public bool destroyOnImpact = true;
 
+    [Header("Movement")]
+    public float speed = 20f;
+
     [Header("Target Filtering")]
+    [Tooltip("Set to the layer(s) representing enemies.")]
     public LayerMask WhatIsEnemy;
 
     [Header("Effects")]
@@ -26,29 +32,53 @@ public class Bullet : MonoBehaviour
             Destroy(gameObject, lifetime);
     }
 
+    private void Update()
+    {
+        // Move the bullet forward
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        if (hasImpacted) return; // Prevent multiple triggers
+        if (hasImpacted) return;
+
+        // Check if the collided object is in the enemy layer
         if (((1 << other.gameObject.layer) & WhatIsEnemy) == 0)
             return;
 
+        // Apply damage if the target has an EnemyAiTutorial component
         EnemyAiTutorial enemy = other.GetComponent<EnemyAiTutorial>();
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
-            enemy.ChangeColor(Color.yellow);
+            enemy.ChangeColor(Color.yellow); // Optional: color feedback
         }
 
+        // Create impact visual effect
         if (impactEffect != null)
-            Instantiate(impactEffect, transform.position, Quaternion.identity);
+        {
+            GameObject effect = Instantiate(impactEffect, transform.position, Quaternion.LookRotation(-transform.forward));
+            Destroy(effect, 2f); // Clean up the effect after time
+        }
 
+        // Play impact sound with slight pitch variation
         if (hitSound != null && audioSource != null)
+        {
+            audioSource.pitch = Random.Range(0.95f, 1.05f);
             audioSource.PlayOneShot(hitSound);
+        }
 
         if (destroyOnImpact)
         {
             hasImpacted = true;
-            Destroy(gameObject, 5f); // Delay destruction by 5 seconds
+            StartCoroutine(DestroyAfterSound());
         }
+    }
+
+    private IEnumerator DestroyAfterSound()
+    {
+        if (audioSource != null && hitSound != null)
+            yield return new WaitForSeconds(hitSound.length);
+        Destroy(gameObject);
     }
 }
