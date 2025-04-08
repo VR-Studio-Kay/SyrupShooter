@@ -46,12 +46,16 @@ public class Bullet : MonoBehaviour
         if (((1 << other.gameObject.layer) & WhatIsEnemy) == 0)
             return;
 
-        // Apply damage if the target has an EnemyAiTutorial component
-        EnemyAiTutorial enemy = other.GetComponent<EnemyAiTutorial>();
+        // Apply damage if the target has an EnemyHealth component
+        EnemyHealth enemy = other.GetComponent<EnemyHealth>();
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
-            enemy.ChangeColor(Color.yellow); // Optional: color feedback
+
+            // Optional: visual feedback
+            EnemyVisuals visuals = enemy.GetComponent<EnemyVisuals>();
+            if (visuals != null)
+                visuals.ChangeColor(Color.yellow);
         }
 
         // Create impact visual effect
