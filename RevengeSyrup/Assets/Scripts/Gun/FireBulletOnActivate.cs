@@ -1,43 +1,30 @@
 using UnityEngine;
-using UnityEngine.XR;
-using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.InputSystem;
 
 public class FireBulletOnActivate : MonoBehaviour
 {
-    [Header("Bullet Settings")]
-    public GameObject bullet;
-    public Transform spawnPoint;
-    public float fireSpeed = 20f;
-
-    [Header("Input Settings")]
-    public InputActionProperty triggerAction;  // Reference to the input action for the trigger
-
-    private void OnEnable()
-    {
-        // Ensure the action is enabled when the object is active
-        triggerAction.action.Enable();
-    }
-
-    private void OnDisable()
-    {
-        // Disable the action when the object is disabled
-        triggerAction.action.Disable();
-    }
+    public GameObject bullet;  // Bullet prefab to instantiate
+    public Transform spawnPoint;  // Where the bullet will be spawned from
+    public float fireSpeed = 20f;  // Speed at which the bullet will move
 
     void Update()
     {
-        // Check if the trigger button is pressed
-        if (triggerAction.action.ReadValue<float>() > 0.1f) // Check if the trigger is pressed (adjust threshold if needed)
+        // Debug log to check if the trigger is being pressed
+        if (Input.GetButtonDown("Fire1"))
         {
-            Debug.Log("Trigger pressed, firing bullet.");
+            Debug.Log("Trigger button pressed - firing bullet...");
             FireBullet();
+        }
+        else
+        {
+            // Optional: Log if the trigger is not being pressed
+            Debug.Log("Trigger not pressed.");
         }
     }
 
-    private void FireBullet()
+    public void FireBullet()
     {
-        // Check if the bullet prefab and spawn point are assigned
+        Debug.Log("Fire1 button pressed. Attempting to fire...");
+
         if (bullet == null)
         {
             Debug.LogError("Bullet prefab is not assigned.");
@@ -46,14 +33,14 @@ public class FireBulletOnActivate : MonoBehaviour
 
         if (spawnPoint == null)
         {
-            Debug.LogError("Spawn point is not assigned.");
+            Debug.LogError("SpawnPoint is not assigned.");
             return;
         }
 
-        // Instantiate the bullet at the spawn point's position and rotation
+        // Instantiate the bullet at the spawn point
         GameObject spawnedBullet = Instantiate(bullet, spawnPoint.position, spawnPoint.rotation);
+        Debug.Log("Bullet spawned at position: " + spawnPoint.position);
 
-        // Get the Rigidbody component and apply velocity to the bullet
         Rigidbody rb = spawnedBullet.GetComponent<Rigidbody>();
         if (rb == null)
         {
@@ -61,8 +48,9 @@ public class FireBulletOnActivate : MonoBehaviour
             return;
         }
 
+        // Set the linear velocity of the bullet in the direction it is facing
         rb.linearVelocity = spawnPoint.forward * fireSpeed;
-        Debug.Log("Bullet fired with velocity: " + rb.linearVelocity);
+        Debug.Log("Bullet fired with linearVelocity: " + rb.linearVelocity);
 
         // Destroy the bullet after 5 seconds
         Destroy(spawnedBullet, 5f);

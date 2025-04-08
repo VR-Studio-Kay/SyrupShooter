@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 7011109487979069770}
   - component: {fileID: 1593745529401968380}
   - component: {fileID: 2656981868971067585}
-  - component: {fileID: 3723646917024947683}
   - component: {fileID: -1885939111483548018}
+  - component: {fileID: 1192826205228839979}
   m_Layer: 2
   m_Name: Projectile
   m_TagString: Untagged
@@ -138,19 +138,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &3723646917024947683
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2733614829565478642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 11bd216962d89e64eb9121ca9925089d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  damage: 20
 --- !u!96 &-1885939111483548018
 TrailRenderer:
   serializedVersion: 3
@@ -267,3 +254,19 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
+--- !u!114 &1192826205228839979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2733614829565478642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43cacc397551bb548afaf11bd293bc15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damage: 10
+  lifetime: 5
+  bloodEffectPrefab: {fileID: 0}
+  hitSound: {fileID: 0}
