@@ -4,8 +4,8 @@ public class AutoAttachGun : MonoBehaviour
 {
     private void Start()
     {
-        // Simply make sure the gun is in the right hand at the start.
-        Transform rightHandTransform = GameObject.Find("RightHand Controller").transform;
+        // Change the name from "RightHand Controller" to "Right Controller"
+        Transform rightHandTransform = GameObject.Find("Right Controller")?.transform;
 
         if (rightHandTransform != null)
         {
@@ -18,7 +18,7 @@ public class AutoAttachGun : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Could not find the Right Hand Controller!");
+            Debug.LogWarning("Could not find the Right Controller! Make sure it is in the scene and correctly named.");
         }
     }
 }
