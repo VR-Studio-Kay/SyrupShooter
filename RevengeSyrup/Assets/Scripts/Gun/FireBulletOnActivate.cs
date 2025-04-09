@@ -1,47 +1,75 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR;
 
-public class FireBulletOnTrigger : MonoBehaviour
+public class FireBulletOnActivate : MonoBehaviour
 {
+    [Header("Gun Settings")]
     public GameObject bulletPrefab;
     public Transform firePoint;
     public float bulletForce = 20f;
+    public float reloadAngleThreshold = 60f; // Degrees below horizontal to reload
 
-    private InputDevice rightController;
+    [Header("Ammo Settings")]
+    public int maxAmmo = 10;
+    private int currentAmmo;
 
-    void Start()
+    private void Start()
     {
-        // Get the right-hand XR controller
-        var rightHandedControllers = new List<InputDevice>();
-        InputDevices.GetDevicesAtXRNode(XRNode.RightHand, rightHandedControllers);
-        if (rightHandedControllers.Count > 0)
+        currentAmmo = maxAmmo;
+    }
+
+    private void Update()
+    {
+        HandleInput();
+        CheckReloadByAngle();
+    }
+
+    private void HandleInput()
+    {
+        // Replace this with XR trigger input if needed
+        if (Input.GetButtonDown("Fire1"))
         {
-            rightController = rightHandedControllers[0];
-            Debug.Log("Right hand controller found!");
-        }
-        else
-        {
-            Debug.LogWarning("No right hand controller found!");
+            TryShoot();
         }
     }
 
-    void Update()
+    private void TryShoot()
     {
-        if (rightController != null)
+        if (currentAmmo <= 0)
         {
-            if (rightController.TryGetFeatureValue(CommonUsages.triggerButton, out bool triggerPressed) && triggerPressed)
-            {
-                Fire();
-            }
+            Debug.Log("[Gun] Out of ammo!");
+            return;
         }
+
+        Shoot();
+        currentAmmo--;
+        Debug.Log($"[Gun] Shot fired. Ammo left: {currentAmmo}");
     }
 
-    void Fire()
+    private void Shoot()
     {
         GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         rb.linearVelocity = firePoint.forward * bulletForce;
-        Debug.Log("Gun fired!");
+    }
+
+    private void CheckReloadByAngle()
+    {
+        // Check if gun is pointing downward
+        float angle = Vector3.Angle(transform.forward, Vector3.down);
+        if (angle < reloadAngleThreshold && currentAmmo < maxAmmo)
+        {
+            Reload();
+        }
+    }
+
+    private void Reload()
+    {
+        currentAmmo = maxAmmo;
+        Debug.Log("[Gun] Reloaded!");
+    }
+
+    public int GetCurrentAmmo()
+    {
+        return currentAmmo;
     }
 }
