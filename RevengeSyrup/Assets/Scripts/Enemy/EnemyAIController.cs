@@ -28,7 +28,10 @@ public class EnemyAIController : MonoBehaviour
 
     [Header("Patrol Settings")]
     [SerializeField] private Transform[] patrolPoints;
-    private int currentPatrolIndex = 0;
+    private EnemyPatrol enemyPatrol;
+
+    [Header("AI State Settings")]
+    [SerializeField] private float returnToPatrolDistance = 10f; // Distance at which enemy returns to patrol mode after losing sight of player
 
     private enum EnemyState { Patrol, Hostile }
     private EnemyState currentState = EnemyState.Patrol;
@@ -49,30 +52,37 @@ public class EnemyAIController : MonoBehaviour
     {
         if (player == null)
         {
-            Patrol();
+            currentState = EnemyState.Patrol;
             return;
         }
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        if (distanceToPlayer < sightRange)
+        // Check if the player is within sight range and there is a clear line of sight
+        if (distanceToPlayer < sightRange && CanSeePlayer())
         {
+            // Player detected and can be seen, switch to hostile state
             currentState = EnemyState.Hostile;
             lostPlayerTimer = 0f;
         }
         else if (currentState == EnemyState.Hostile)
         {
+            // Check if the player is far enough to return to patrol
             lostPlayerTimer += Time.deltaTime;
-            if (lostPlayerTimer >= timeToForgetPlayer)
+            if (lostPlayerTimer >= timeToForgetPlayer || distanceToPlayer > returnToPatrolDistance)
             {
                 currentState = EnemyState.Patrol;
+                enemyPatrol.enabled = true; // Re-enable patrolling
+                Debug.Log("Enemy returning to patrol.");
             }
         }
 
         switch (currentState)
         {
             case EnemyState.Patrol:
-                Patrol();
+                // The patrolling is now handled by the EnemyPatrol script
+                enemyPatrol.enabled = true;
+                Debug.Log("Enemy is in Patrol state.");
                 break;
             case EnemyState.Hostile:
                 HandleHostileState(distanceToPlayer);
@@ -101,8 +111,9 @@ public class EnemyAIController : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         enemyRenderer = GetComponent<Renderer>();
+        enemyPatrol = GetComponent<EnemyPatrol>(); // Reference to the EnemyPatrol script
 
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Origin");
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
             player = playerObj.transform;
@@ -112,30 +123,24 @@ public class EnemyAIController : MonoBehaviour
             Debug.LogWarning("Player with tag 'Origin' not found. Enemy will not chase.");
         }
 
-        whatIsGround = LayerMask.GetMask("Ground");
+        whatIsGround = LayerMask.GetMask("WhatIsGround");
         maxHealth = health;
         healthBar?.SetMaxHealth(maxHealth);
+
+        // Set patrol points for the enemyPatrol script
+        if (enemyPatrol != null && patrolPoints.Length > 0)
+        {
+            enemyPatrol.SetPatrolPoints(patrolPoints);
+        }
     }
 
     #endregion
 
     #region Behavior Logic
 
-    private void Patrol()
-    {
-        if (patrolPoints.Length == 0) return;
-
-        Transform targetPoint = patrolPoints[currentPatrolIndex];
-        agent.SetDestination(targetPoint.position);
-
-        if (Vector3.Distance(transform.position, targetPoint.position) < 1f)
-        {
-            currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
-        }
-    }
-
     private void HandleHostileState(float distanceToPlayer)
     {
+        // Enemy will chase the player
         ChasePlayer();
 
         if (distanceToPlayer < attackRange && !alreadyAttacked)
@@ -159,6 +164,28 @@ public class EnemyAIController : MonoBehaviour
         Vector3 direction = (player.position - transform.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+    }
+
+    // Check if there are any obstacles between the enemy and the player
+    private bool CanSeePlayer()
+    {
+        RaycastHit hit;
+        Vector3 directionToPlayer = player.position - transform.position;
+
+        // Perform a raycast to check if there's any obstacle between the enemy and the player
+        if (Physics.Raycast(transform.position, directionToPlayer, out hit, sightRange))
+        {
+            if (hit.collider.CompareTag("Player"))
+            {
+                return true; // The player is in sight, and there's nothing blocking the way
+            }
+            else
+            {
+                return false; // The ray hit something other than the player (like a wall)
+            }
+        }
+
+        return false; // No raycast hit anything, so the player is not in sight
     }
 
     #endregion

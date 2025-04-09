@@ -24,11 +24,11 @@ public class EnemyBullet : MonoBehaviour
         if (hasHit) return; // Prevent multiple collisions
         hasHit = true;
 
-        // Check if the collided object is tagged as "Player"
-        if (other.CompareTag("Player"))
+        // Check if the collided object is a child of the "Player" tagged object (XR Origin)
+        if (other.transform.root.CompareTag("Player"))
         {
-            PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
-            if (playerHealth != null)
+            PlayerHealth playerHealth = other.GetComponentInParent<PlayerHealth>();
+            if (playerHealth != null && playerHealth.CurrentHealth > 0)
             {
                 // Call TakeDamage method on the player and log the damage
                 playerHealth.TakeDamage(damage);
