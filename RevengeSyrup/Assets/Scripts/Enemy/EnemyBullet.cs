@@ -4,48 +4,56 @@ public class EnemyBullet : MonoBehaviour
 {
     public int damage = 10;
     public float lifetime = 5f;
-    public GameObject bloodEffectPrefab;
-    public AudioClip hitSound;
+    public GameObject bloodEffectPrefab; // Assign a blood screen UI or particle prefab
+    public AudioClip hitSound;           // Optional: sound effect on hit
 
-    public LayerMask whatIsPlayer; // assign via Inspector
-
-    private bool hasHit = false;
+    private bool hasHit = false;         // Prevent double damage
     private AudioSource audioSource;
 
     private void Start()
     {
-        Destroy(gameObject, lifetime);
+        Destroy(gameObject, lifetime); // Clean up after time
         audioSource = GetComponent<AudioSource>();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (hasHit) return;
+        // Log the name and tag of the object the bullet collided with
+        Debug.Log($"[EnemyBullet] Hit object: {other.gameObject.name}, Tag: {other.tag}");
+
+        if (hasHit) return; // Prevent multiple collisions
         hasHit = true;
 
-        // Check if collided object is on the player layer
-        if (((1 << other.gameObject.layer) & whatIsPlayer) != 0)
+        // Check if the collided object is tagged as "Player"
+        if (other.CompareTag("Player"))
         {
-            Debug.Log($"[EnemyBullet] Hit player-layer object: {other.name}");
-
             PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
             if (playerHealth != null)
             {
+                // Call TakeDamage method on the player and log the damage
                 playerHealth.TakeDamage(damage);
-                Debug.Log($"[EnemyBullet] Damage dealt: {damage}");
+                Debug.Log($"[EnemyBullet] Player hit! -{damage} HP | Remaining: {playerHealth.GetCurrentHealth()}");
 
+                // Optional: Blood screen or hit feedback
                 if (bloodEffectPrefab != null)
+                {
                     Instantiate(bloodEffectPrefab, other.transform.position, Quaternion.identity);
+                }
 
+                // Play hit sound if available
                 if (hitSound != null && audioSource != null)
+                {
                     audioSource.PlayOneShot(hitSound);
+                }
             }
-
-            Destroy(gameObject, 0.05f);
         }
         else
         {
-            Debug.Log($"[EnemyBullet] Hit non-player object: {other.name}");
+            // Log if the bullet hit something that is not the player
+            Debug.Log("[EnemyBullet] Hit non-player object.");
         }
+
+        // Destroy bullet after a small delay (allow sound effect to play)
+        Destroy(gameObject, 0.05f);
     }
 }
