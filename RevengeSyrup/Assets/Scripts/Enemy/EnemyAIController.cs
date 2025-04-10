@@ -23,9 +23,6 @@ public class EnemyAIController : MonoBehaviour
     private bool alreadyAttacked;
     private LayerMask whatIsGround;
 
-    [Header("Visual Feedback")]
-    private Renderer enemyRenderer;
-
     [Header("Patrol Settings")]
     [SerializeField] private Transform[] patrolPoints;
     private EnemyPatrol enemyPatrol;
@@ -47,6 +44,9 @@ public class EnemyAIController : MonoBehaviour
     [Range(0.8f, 1.2f)] public float pitchMax = 1.05f;
 
     private bool hasPlayedDetectSound = false;
+
+    // Reference to the GunController for aiming and firing
+    [SerializeField] private GunController gunController;
 
     #endregion
 
@@ -71,6 +71,13 @@ public class EnemyAIController : MonoBehaviour
         {
             currentState = EnemyState.Hostile;
             lostPlayerTimer = 0f;
+            if (!hasPlayedDetectSound)
+            {
+                PlaySound(detectSound);
+                hasPlayedDetectSound = true;
+            }
+
+            gunController.OnPlayerDetected(); // Notify GunController that the player is detected
         }
         else if (currentState == EnemyState.Hostile)
         {
@@ -79,6 +86,8 @@ public class EnemyAIController : MonoBehaviour
             {
                 currentState = EnemyState.Patrol;
                 enemyPatrol.enabled = true;
+                gunController.OnPlayerLost(); // Notify GunController that the player is no longer detected
+                hasPlayedDetectSound = false; // Reset sound flag
                 Debug.Log("Enemy returning to patrol.");
             }
         }
@@ -91,12 +100,6 @@ public class EnemyAIController : MonoBehaviour
             case EnemyState.Hostile:
                 HandleHostileState(distanceToPlayer);
                 break;
-        }
-
-        // Always make sure the enemy faces the player in the hostile state
-        if (currentState == EnemyState.Hostile)
-        {
-            LookAtPlayer();
         }
     }
 
@@ -115,7 +118,6 @@ public class EnemyAIController : MonoBehaviour
     private void InitializeComponents()
     {
         agent = GetComponent<NavMeshAgent>();
-        enemyRenderer = GetComponent<Renderer>();
         enemyPatrol = GetComponent<EnemyPatrol>();
 
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -144,8 +146,9 @@ public class EnemyAIController : MonoBehaviour
         if (distanceToPlayer < attackRange && distanceToPlayer >= safeDistance && !alreadyAttacked)
         {
             alreadyAttacked = true;
-            FireBullet();
-            Invoke(nameof(ResetAttack), 1f);
+            gunController.Fire(); // Fire the gun
+            PlaySound(attackSound); // Play attack sound
+            Invoke(nameof(ResetAttack), 3f); // Wait 3 seconds before allowing the next shot
         }
         else if (distanceToPlayer < safeDistance)
         {
@@ -174,8 +177,6 @@ public class EnemyAIController : MonoBehaviour
         agent.SetDestination(newPosition);
     }
 
-
-
     private void ChasePlayer()
     {
         if (player != null)
@@ -196,7 +197,6 @@ public class EnemyAIController : MonoBehaviour
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 200f * Time.deltaTime); // Adjust '200f' to change speed
     }
 
-
     private bool CanSeePlayer()
     {
         RaycastHit hit;
@@ -206,37 +206,6 @@ public class EnemyAIController : MonoBehaviour
             return hit.collider.CompareTag("Player");
 
         return false;
-    }
-
-    #endregion
-
-    #region Combat
-
-    private void FireBullet()
-    {
-        if (projectile == null || spawnPoint == null)
-        {
-            Debug.LogError("Projectile or spawn point is not assigned.");
-            return;
-        }
-
-        GameObject spawnedBullet = Instantiate(projectile, spawnPoint.position, Quaternion.identity);
-        Rigidbody rb = spawnedBullet.GetComponent<Rigidbody>();
-
-        if (rb != null)
-        {
-            rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
-            if (player.position.y > transform.position.y)
-                rb.AddForce(transform.up * 8f, ForceMode.Impulse);
-        }
-
-        PlaySound(attackSound);
-        Destroy(spawnedBullet, 5f);
-    }
-
-    private void ResetAttack()
-    {
-        alreadyAttacked = false;
     }
 
     #endregion
@@ -269,6 +238,7 @@ public class EnemyAIController : MonoBehaviour
 
     public void ChangeColor(Color newColor)
     {
+        Renderer enemyRenderer = GetComponent<Renderer>();
         if (enemyRenderer != null)
         {
             enemyRenderer.material.color = newColor;
@@ -278,6 +248,7 @@ public class EnemyAIController : MonoBehaviour
 
     private void ResetColor()
     {
+        Renderer enemyRenderer = GetComponent<Renderer>();
         if (enemyRenderer != null)
             enemyRenderer.material.color = Color.red;
     }
@@ -293,6 +264,15 @@ public class EnemyAIController : MonoBehaviour
             audioSource.pitch = Random.Range(pitchMin, pitchMax);
             audioSource.PlayOneShot(clip);
         }
+    }
+
+    #endregion
+
+    #region Reset Attack
+
+    private void ResetAttack()
+    {
+        alreadyAttacked = false;
     }
 
     #endregion
