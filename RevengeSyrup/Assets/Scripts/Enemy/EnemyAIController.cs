@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -69,6 +68,12 @@ public class EnemyAIController : MonoBehaviour
 
         if (distanceToPlayer < sightRange && CanSeePlayer())
         {
+            if (!hasPlayedDetectSound)
+            {
+                PlaySound(detectSound);
+                hasPlayedDetectSound = true;
+            }
+
             currentState = EnemyState.Hostile;
             lostPlayerTimer = 0f;
         }
@@ -174,8 +179,6 @@ public class EnemyAIController : MonoBehaviour
         agent.SetDestination(newPosition);
     }
 
-
-
     private void ChasePlayer()
     {
         if (player != null)
@@ -195,7 +198,6 @@ public class EnemyAIController : MonoBehaviour
         // Smoothly rotate the enemy towards the player using RotateTowards
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 200f * Time.deltaTime); // Adjust '200f' to change speed
     }
-
 
     private bool CanSeePlayer()
     {
@@ -225,9 +227,10 @@ public class EnemyAIController : MonoBehaviour
 
         if (rb != null)
         {
-            rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
+            // Fire bullet in the direction of the spawn point's forward direction
+            rb.AddForce(spawnPoint.forward * 32f, ForceMode.Impulse);
             if (player.position.y > transform.position.y)
-                rb.AddForce(transform.up * 8f, ForceMode.Impulse);
+                rb.AddForce(spawnPoint.up * 8f, ForceMode.Impulse);
         }
 
         PlaySound(attackSound);

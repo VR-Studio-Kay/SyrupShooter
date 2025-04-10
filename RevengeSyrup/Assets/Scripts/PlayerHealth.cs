@@ -143,10 +143,11 @@ public class PlayerHealth : MonoBehaviour
         RestartScene();
     }
 
-    private void RestartScene()
+    public void RestartScene()
     {
         // Get the current active scene and reload it
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
     }
+
 }
