@@ -31,13 +31,22 @@ public class EnemyAIController : MonoBehaviour
     private EnemyPatrol enemyPatrol;
 
     [Header("AI State Settings")]
-    [SerializeField] private float returnToPatrolDistance = 10f; // Distance at which enemy returns to patrol mode after losing sight of player
-
+    [SerializeField] private float returnToPatrolDistance = 10f;
+    private float lostPlayerTimer = 0f;
+    [SerializeField] private float safeDistance = 3f; // Minimum distance the enemy should keep from the player
+    [SerializeField] private float timeToForgetPlayer = 5f;
     private enum EnemyState { Patrol, Hostile }
     private EnemyState currentState = EnemyState.Patrol;
 
-    private float lostPlayerTimer = 0f;
-    [SerializeField] private float timeToForgetPlayer = 5f;
+    [Header("Audio Settings")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip detectSound;
+    [SerializeField] private AudioClip attackSound;
+    [SerializeField] private AudioClip deathSound;
+    [Range(0.8f, 1.2f)] public float pitchMin = 0.95f;
+    [Range(0.8f, 1.2f)] public float pitchMax = 1.05f;
+
+    private bool hasPlayedDetectSound = false;
 
     #endregion
 
@@ -58,21 +67,18 @@ public class EnemyAIController : MonoBehaviour
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        // Check if the player is within sight range and there is a clear line of sight
         if (distanceToPlayer < sightRange && CanSeePlayer())
         {
-            // Player detected and can be seen, switch to hostile state
             currentState = EnemyState.Hostile;
             lostPlayerTimer = 0f;
         }
         else if (currentState == EnemyState.Hostile)
         {
-            // Check if the player is far enough to return to patrol
             lostPlayerTimer += Time.deltaTime;
             if (lostPlayerTimer >= timeToForgetPlayer || distanceToPlayer > returnToPatrolDistance)
             {
                 currentState = EnemyState.Patrol;
-                enemyPatrol.enabled = true; // Re-enable patrolling
+                enemyPatrol.enabled = true;
                 Debug.Log("Enemy returning to patrol.");
             }
         }
@@ -80,16 +86,15 @@ public class EnemyAIController : MonoBehaviour
         switch (currentState)
         {
             case EnemyState.Patrol:
-                // The patrolling is now handled by the EnemyPatrol script
                 enemyPatrol.enabled = true;
-                Debug.Log("Enemy is in Patrol state.");
                 break;
             case EnemyState.Hostile:
                 HandleHostileState(distanceToPlayer);
                 break;
         }
 
-        if (currentState == EnemyState.Hostile && distanceToPlayer < sightRange)
+        // Always make sure the enemy faces the player in the hostile state
+        if (currentState == EnemyState.Hostile)
         {
             LookAtPlayer();
         }
@@ -111,27 +116,22 @@ public class EnemyAIController : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         enemyRenderer = GetComponent<Renderer>();
-        enemyPatrol = GetComponent<EnemyPatrol>(); // Reference to the EnemyPatrol script
+        enemyPatrol = GetComponent<EnemyPatrol>();
 
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
-        {
             player = playerObj.transform;
-        }
-        else
-        {
-            Debug.LogWarning("Player with tag 'Origin' not found. Enemy will not chase.");
-        }
 
         whatIsGround = LayerMask.GetMask("WhatIsGround");
+
         maxHealth = health;
         healthBar?.SetMaxHealth(maxHealth);
 
-        // Set patrol points for the enemyPatrol script
         if (enemyPatrol != null && patrolPoints.Length > 0)
-        {
             enemyPatrol.SetPatrolPoints(patrolPoints);
-        }
+
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
     }
 
     #endregion
@@ -140,52 +140,72 @@ public class EnemyAIController : MonoBehaviour
 
     private void HandleHostileState(float distanceToPlayer)
     {
-        // Enemy will chase the player
-        ChasePlayer();
-
-        if (distanceToPlayer < attackRange && !alreadyAttacked)
+        // If the player is in range for attacking and not too close
+        if (distanceToPlayer < attackRange && distanceToPlayer >= safeDistance && !alreadyAttacked)
         {
             alreadyAttacked = true;
             FireBullet();
             Invoke(nameof(ResetAttack), 1f);
         }
+        else if (distanceToPlayer < safeDistance)
+        {
+            // Move away from the player if too close
+            MoveAwayFromPlayer();
+        }
+        else
+        {
+            // Continue chasing the player if within sight range
+            ChasePlayer();
+        }
+
+        // Always make sure the enemy is facing the player
+        LookAtPlayer();
     }
+
+    private void MoveAwayFromPlayer()
+    {
+        // Calculate the direction to move away from the player
+        Vector3 directionAwayFromPlayer = transform.position - player.position;
+
+        // Use Vector3.MoveTowards to smoothly move away from the player
+        Vector3 newPosition = Vector3.MoveTowards(transform.position, transform.position + directionAwayFromPlayer.normalized * safeDistance, agent.speed * Time.deltaTime);
+
+        // Set the agent's destination to the new position to move smoothly away
+        agent.SetDestination(newPosition);
+    }
+
+
 
     private void ChasePlayer()
     {
         if (player != null)
-        {
             agent.SetDestination(player.position);
-        }
     }
 
     private void LookAtPlayer()
     {
-        Vector3 direction = (player.position - transform.position).normalized;
-        Quaternion lookRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+        if (player == null) return;
+
+        // Get the direction to the player
+        Vector3 directionToPlayer = (player.position - transform.position).normalized;
+
+        // Calculate the desired rotation to face the player
+        Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
+
+        // Smoothly rotate the enemy towards the player using RotateTowards
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 200f * Time.deltaTime); // Adjust '200f' to change speed
     }
 
-    // Check if there are any obstacles between the enemy and the player
+
     private bool CanSeePlayer()
     {
         RaycastHit hit;
         Vector3 directionToPlayer = player.position - transform.position;
 
-        // Perform a raycast to check if there's any obstacle between the enemy and the player
         if (Physics.Raycast(transform.position, directionToPlayer, out hit, sightRange))
-        {
-            if (hit.collider.CompareTag("Player"))
-            {
-                return true; // The player is in sight, and there's nothing blocking the way
-            }
-            else
-            {
-                return false; // The ray hit something other than the player (like a wall)
-            }
-        }
+            return hit.collider.CompareTag("Player");
 
-        return false; // No raycast hit anything, so the player is not in sight
+        return false;
     }
 
     #endregion
@@ -206,17 +226,11 @@ public class EnemyAIController : MonoBehaviour
         if (rb != null)
         {
             rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
-
             if (player.position.y > transform.position.y)
-            {
                 rb.AddForce(transform.up * 8f, ForceMode.Impulse);
-            }
-        }
-        else
-        {
-            Debug.LogError("Projectile does not have a Rigidbody attached.");
         }
 
+        PlaySound(attackSound);
         Destroy(spawnedBullet, 5f);
     }
 
@@ -236,18 +250,16 @@ public class EnemyAIController : MonoBehaviour
         healthBar?.SetHealth(health);
 
         if (health <= 0)
-        {
             DestroyEnemy();
-        }
     }
 
     private void DestroyEnemy()
     {
-        if (agent != null) agent.enabled = false;
-
+        agent.enabled = false;
         Collider mainCollider = GetComponent<Collider>();
         if (mainCollider != null) mainCollider.enabled = false;
 
+        PlaySound(deathSound);
         Destroy(gameObject, 2f);
     }
 
@@ -267,8 +279,19 @@ public class EnemyAIController : MonoBehaviour
     private void ResetColor()
     {
         if (enemyRenderer != null)
-        {
             enemyRenderer.material.color = Color.red;
+    }
+
+    #endregion
+
+    #region Audio Helper
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.pitch = Random.Range(pitchMin, pitchMax);
+            audioSource.PlayOneShot(clip);
         }
     }
 
