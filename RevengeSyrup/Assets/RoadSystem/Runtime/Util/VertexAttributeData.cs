@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Barmetler.RoadSystem.Util
 {
-    [BurstCompatible]
+    [GenerateTestsForBurstCompatibility]
     public struct VertexAttributeData : IDisposable
     {
         [ReadOnly]
