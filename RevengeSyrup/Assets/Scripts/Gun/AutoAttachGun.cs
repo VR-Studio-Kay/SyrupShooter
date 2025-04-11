@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
@@ -8,38 +7,50 @@ public class AutoAttachGun : MonoBehaviour
 {
     private XRGrabInteractable grabInteractable;
     private XRDirectInteractor rightHandInteractor;
+    private XRDirectInteractor leftHandInteractor;
 
     void Start()
     {
-        // Get the XR Grab Interactable component attached to the gun
         grabInteractable = GetComponent<XRGrabInteractable>();
 
-        // Find the XR Direct Interactor for the right hand (adjust this if needed for the left hand)
-        rightHandInteractor = GameObject.Find("Right Controller").GetComponent<XRDirectInteractor>();
+        GameObject rightControllerObj = GameObject.Find("Right Controller");
+        GameObject leftControllerObj = GameObject.Find("Left Controller");
 
-        if (grabInteractable != null && rightHandInteractor != null)
+        if (rightControllerObj != null)
+            rightHandInteractor = rightControllerObj.GetComponent<XRDirectInteractor>();
+        if (leftControllerObj != null)
+            leftHandInteractor = leftControllerObj.GetComponent<XRDirectInteractor>();
+
+        if (grabInteractable != null && (rightHandInteractor != null || leftHandInteractor != null))
         {
-            // Automatically grab the gun using the selectEntered event
+            // Attach event listener
             grabInteractable.selectEntered.AddListener(OnGunGrabbed);
 
-            // Simulate the grab by invoking the selectEntered event with the right hand interactor
-            SelectEnterEventArgs args = new SelectEnterEventArgs();
-            args.interactorObject = rightHandInteractor;  // Use the interactor directly, no need to reference GameObject
+            // Choose which hand to use
+            XRDirectInteractor handToAttach = rightHandInteractor != null ? rightHandInteractor : leftHandInteractor;
 
-            grabInteractable.selectEntered.Invoke(args);  // Trigger the event
+            // Safely cast to interfaces and perform SelectEnter
+            IXRSelectInteractor interactor = handToAttach as IXRSelectInteractor;
+            IXRSelectInteractable interactable = grabInteractable as IXRSelectInteractable;
 
-            Debug.Log("Gun grabbed automatically by the right hand.");
+            if (interactor != null && interactable != null && handToAttach.interactionManager != null)
+            {
+                handToAttach.interactionManager.SelectEnter(interactor, interactable);
+                Debug.Log("Gun grabbed automatically by " + handToAttach.name);
+            }
+            else
+            {
+                Debug.LogError("Failed to cast or interactionManager is missing.");
+            }
         }
         else
         {
-            Debug.LogError("XRGrabInteractable or XRDirectInteractor is missing!");
+            Debug.LogError("Missing XRGrabInteractable or both XRDirectInteractors.");
         }
     }
 
-    // Handle the gun grab logic
     private void OnGunGrabbed(SelectEnterEventArgs args)
     {
-        // Handle logic for when the gun is grabbed by the hand, e.g., change the gun's position or rotation
-        Debug.Log("Gun has been grabbed by the right hand.");
+        Debug.Log("Gun has been grabbed by " + args.interactorObject.transform.name);
     }
 }
