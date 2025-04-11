@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
@@ -23,29 +24,48 @@ public class AutoAttachGun : MonoBehaviour
 
         if (grabInteractable != null && (rightHandInteractor != null || leftHandInteractor != null))
         {
-            // Attach event listener
             grabInteractable.selectEntered.AddListener(OnGunGrabbed);
-
-            // Choose which hand to use
-            XRDirectInteractor handToAttach = rightHandInteractor != null ? rightHandInteractor : leftHandInteractor;
-
-            // Safely cast to interfaces and perform SelectEnter
-            IXRSelectInteractor interactor = handToAttach as IXRSelectInteractor;
-            IXRSelectInteractable interactable = grabInteractable as IXRSelectInteractable;
-
-            if (interactor != null && interactable != null && handToAttach.interactionManager != null)
-            {
-                handToAttach.interactionManager.SelectEnter(interactor, interactable);
-                Debug.Log("Gun grabbed automatically by " + handToAttach.name);
-            }
-            else
-            {
-                Debug.LogError("Failed to cast or interactionManager is missing.");
-            }
+            StartCoroutine(AttachGunNextFrame());
         }
         else
         {
             Debug.LogError("Missing XRGrabInteractable or both XRDirectInteractors.");
+        }
+    }
+
+    private IEnumerator AttachGunNextFrame()
+    {
+        yield return null; // Wait one frame to allow interaction system to initialize
+
+        XRDirectInteractor handToAttach = rightHandInteractor != null ? rightHandInteractor : leftHandInteractor;
+
+        if (handToAttach == null)
+        {
+            Debug.LogWarning("No available hand to attach the gun.");
+            yield break;
+        }
+
+        // Ensure the attach transform is set for proper alignment
+        grabInteractable.attachTransform = handToAttach.attachTransform;
+
+        // Force release if the hand is already grabbing something
+        if (handToAttach.hasSelection)
+        {
+            handToAttach.interactionManager.SelectExit(handToAttach, handToAttach.firstInteractableSelected);
+        }
+
+        // Safely cast to interfaces
+        IXRSelectInteractor interactor = handToAttach as IXRSelectInteractor;
+        IXRSelectInteractable interactable = grabInteractable as IXRSelectInteractable;
+
+        if (interactor != null && interactable != null && handToAttach.interactionManager != null)
+        {
+            handToAttach.interactionManager.SelectEnter(interactor, interactable);
+            Debug.Log("Gun grabbed automatically by " + handToAttach.name);
+        }
+        else
+        {
+            Debug.LogError("Failed to cast interactor or interactable, or interactionManager is missing.");
         }
     }
 

@@ -483,11 +483,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8697908276824547162, guid: c7cd2e5d65ae8594b90c149edf8301dd, type: 3}
   m_PrefabInstance: {fileID: 141187864}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &141187868 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1827029683631196086, guid: c7cd2e5d65ae8594b90c149edf8301dd, type: 3}
-  m_PrefabInstance: {fileID: 141187864}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &141187869 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1980881255179645837, guid: c7cd2e5d65ae8594b90c149edf8301dd, type: 3}
@@ -784,7 +779,7 @@ MonoBehaviour:
   m_StartingHoverFilters: []
   m_StartingSelectFilters: []
   m_StartingInteractionStrengthFilters: []
-  m_AttachTransform: {fileID: 141187868}
+  m_AttachTransform: {fileID: 1832465293}
   m_SecondaryAttachTransform: {fileID: 0}
   m_UseDynamicAttach: 0
   m_MatchAttachPosition: 1
@@ -6026,6 +6021,11 @@ MonoBehaviour:
   m_ObsoleteUseShadowQualitySettings: 0
   m_ObsoleteCustomShadowResolution: 512
   m_ObsoleteContactShadows: 0
+--- !u!4 &1832465293 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3828408713642823509, guid: c7cd2e5d65ae8594b90c149edf8301dd, type: 3}
+  m_PrefabInstance: {fileID: 141187864}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1873350809
 GameObject:
   m_ObjectHideFlags: 0

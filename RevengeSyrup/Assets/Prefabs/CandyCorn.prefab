@@ -153,15 +153,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d19326a143c21947916d3b097b02dc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 25
+  baseDamage: 40
   lifetime: 5
   destroyOnImpact: 1
   speed: 0
+  usePhysics: 1
   WhatIsEnemy:
     serializedVersion: 2
     m_Bits: 4096
   impactEffect: {fileID: 2955623459812423943, guid: f5507a8c6a22c404ab324980c4e8a11b, type: 3}
   hitSound: {fileID: 0}
+  knockbackForce: 10
+  forceMode: 1
+  useObjectPooling: 0
+  bulletPoolReturnTarget: {fileID: 0}
 --- !u!96 &3607380763871945840
 TrailRenderer:
   serializedVersion: 3
