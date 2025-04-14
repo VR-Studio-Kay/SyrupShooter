@@ -1,8 +1,10 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[DisallowMultipleComponent]
 public class GunInputHandler : MonoBehaviour
 {
+    [Tooltip("The input action used to trigger firing.")]
     public InputActionProperty activateAction;
 
     private GunControllerPlayer gunController;
@@ -22,10 +24,11 @@ public class GunInputHandler : MonoBehaviour
     private void Start()
     {
         gunController = GetComponent<GunControllerPlayer>();
+        if (!gunController) Debug.LogWarning("GunControllerPlayer not found.");
     }
 
     private void OnActivatePerformed(InputAction.CallbackContext context)
     {
-        gunController.TryFire();
+        gunController?.TryFire();
     }
 }

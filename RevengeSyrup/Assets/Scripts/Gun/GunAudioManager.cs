@@ -1,12 +1,17 @@
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class GunAudioManager : MonoBehaviour
 {
-    public AudioSource shootSound;
-    public AudioSource reloadSound;
-    public AudioClip outOfAmmoClip;
-    [Range(0.8f, 1.2f)] public float pitchVariationMin = 0.95f;
-    [Range(0.8f, 1.2f)] public float pitchVariationMax = 1.05f;
+    [Header("Audio")]
+    [SerializeField] private AudioSource shootSound;
+    [SerializeField] private AudioSource reloadSound;
+    [SerializeField] private AudioClip outOfAmmoClip;
+
+    [Range(0.8f, 1.2f)]
+    [SerializeField] private float pitchVariationMin = 0.95f;
+    [Range(0.8f, 1.2f)]
+    [SerializeField] private float pitchVariationMax = 1.05f;
 
     public void PlayShoot()
     {

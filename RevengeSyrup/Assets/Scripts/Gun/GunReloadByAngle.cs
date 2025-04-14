@@ -1,9 +1,11 @@
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class GunReloadByAngle : MonoBehaviour
 {
-    public float reloadAngleThreshold = 70f;
-    public float reloadCooldown = 2f;
+    [Header("Reload Settings")]
+    [SerializeField] private float reloadAngleThreshold = 70f;
+    [SerializeField] private float reloadCooldown = 2f;
 
     private float lastReloadTime;
     private GunControllerPlayer gunController;
@@ -11,6 +13,10 @@ public class GunReloadByAngle : MonoBehaviour
     private void Start()
     {
         gunController = GetComponent<GunControllerPlayer>();
+        if (!gunController)
+        {
+            Debug.LogWarning("GunControllerPlayer component not found on this GameObject.");
+        }
     }
 
     private void Update()
@@ -20,11 +26,17 @@ public class GunReloadByAngle : MonoBehaviour
 
     private void CheckReloadByAngle()
     {
-        float zRotation = transform.localEulerAngles.z;
-        if (zRotation > 180f)
-            zRotation -= 360f;
+        if (gunController == null) return;
 
-        if (Mathf.Abs(zRotation) >= reloadAngleThreshold && gunController.currentAmmo < gunController.maxAmmo)
+        // Debug the current rotation values of the controller
+        Vector3 localRotation = transform.localEulerAngles;
+        Debug.Log($"[Reload Debug] Rotation - X: {localRotation.x:F2}, Y: {localRotation.y:F2}, Z: {localRotation.z:F2}");
+
+        float xRotation = localRotation.x;
+        if (xRotation > 180f)
+            xRotation -= 360f;
+
+        if (Mathf.Abs(xRotation) >= reloadAngleThreshold && gunController.CurrentAmmo < gunController.MaxAmmo)
         {
             if (Time.time - lastReloadTime > reloadCooldown)
             {
