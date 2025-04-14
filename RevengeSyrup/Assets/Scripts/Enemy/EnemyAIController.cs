@@ -11,6 +11,7 @@ public class EnemyAIController : MonoBehaviour
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private float attackRange = 2f;
     [SerializeField] private float sightRange = 5f;
+    [SerializeField] private float attackCooldown = 3f;
 
     [Header("Health Settings")]
     [SerializeField] private int health = 100;
@@ -30,7 +31,7 @@ public class EnemyAIController : MonoBehaviour
     [Header("AI State Settings")]
     [SerializeField] private float returnToPatrolDistance = 10f;
     private float lostPlayerTimer = 0f;
-    [SerializeField] private float safeDistance = 3f; // Minimum distance the enemy should keep from the player
+    [SerializeField] private float safeDistance = 3f;
     [SerializeField] private float timeToForgetPlayer = 5f;
     private enum EnemyState { Patrol, Hostile }
     private EnemyState currentState = EnemyState.Patrol;
@@ -45,8 +46,13 @@ public class EnemyAIController : MonoBehaviour
 
     private bool hasPlayedDetectSound = false;
 
-    // Reference to the GunController for aiming and firing
+    [Header("Gun")]
     [SerializeField] private GunController gunController;
+
+    [Header("Vision Settings")]
+    [SerializeField] private LayerMask obstructionMask;
+
+    private Animator animator;
 
     #endregion
 
@@ -71,13 +77,14 @@ public class EnemyAIController : MonoBehaviour
         {
             currentState = EnemyState.Hostile;
             lostPlayerTimer = 0f;
+
             if (!hasPlayedDetectSound)
             {
                 PlaySound(detectSound);
                 hasPlayedDetectSound = true;
             }
 
-            gunController.OnPlayerDetected(); // Notify GunController that the player is detected
+            gunController.OnPlayerDetected();
         }
         else if (currentState == EnemyState.Hostile)
         {
@@ -86,8 +93,8 @@ public class EnemyAIController : MonoBehaviour
             {
                 currentState = EnemyState.Patrol;
                 enemyPatrol.enabled = true;
-                gunController.OnPlayerLost(); // Notify GunController that the player is no longer detected
-                hasPlayedDetectSound = false; // Reset sound flag
+                gunController.OnPlayerLost();
+                hasPlayedDetectSound = false;
                 Debug.Log("Enemy returning to patrol.");
             }
         }
@@ -96,7 +103,9 @@ public class EnemyAIController : MonoBehaviour
         {
             case EnemyState.Patrol:
                 enemyPatrol.enabled = true;
+                animator?.SetBool("IsMoving", false);
                 break;
+
             case EnemyState.Hostile:
                 HandleHostileState(distanceToPlayer);
                 break;
@@ -111,6 +120,15 @@ public class EnemyAIController : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, sightRange);
     }
 
+    private void OnDrawGizmos()
+    {
+        if (player != null)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(transform.position, player.position);
+        }
+    }
+
     #endregion
 
     #region Initialization
@@ -119,6 +137,7 @@ public class EnemyAIController : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         enemyPatrol = GetComponent<EnemyPatrol>();
+        animator = GetComponent<Animator>();
 
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
@@ -142,39 +161,35 @@ public class EnemyAIController : MonoBehaviour
 
     private void HandleHostileState(float distanceToPlayer)
     {
-        // If the player is in range for attacking and not too close
         if (distanceToPlayer < attackRange && distanceToPlayer >= safeDistance && !alreadyAttacked)
         {
             alreadyAttacked = true;
-            gunController.Fire(); // Fire the gun
-            PlaySound(attackSound); // Play attack sound
-            Invoke(nameof(ResetAttack), 3f); // Wait 3 seconds before allowing the next shot
+            gunController.Fire();
+            PlaySound(attackSound);
+            Invoke(nameof(ResetAttack), attackCooldown);
         }
         else if (distanceToPlayer < safeDistance)
         {
-            // Move away from the player if too close
             MoveAwayFromPlayer();
         }
         else
         {
-            // Continue chasing the player if within sight range
             ChasePlayer();
         }
 
-        // Always make sure the enemy is facing the player
+        animator?.SetBool("IsMoving", true);
         LookAtPlayer();
     }
 
     private void MoveAwayFromPlayer()
     {
-        // Calculate the direction to move away from the player
-        Vector3 directionAwayFromPlayer = transform.position - player.position;
+        Vector3 directionAwayFromPlayer = (transform.position - player.position).normalized;
+        Vector3 targetPos = transform.position + directionAwayFromPlayer * safeDistance;
 
-        // Use Vector3.MoveTowards to smoothly move away from the player
-        Vector3 newPosition = Vector3.MoveTowards(transform.position, transform.position + directionAwayFromPlayer.normalized * safeDistance, agent.speed * Time.deltaTime);
-
-        // Set the agent's destination to the new position to move smoothly away
-        agent.SetDestination(newPosition);
+        if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
+        }
     }
 
     private void ChasePlayer()
@@ -187,25 +202,28 @@ public class EnemyAIController : MonoBehaviour
     {
         if (player == null) return;
 
-        // Get the direction to the player
         Vector3 directionToPlayer = (player.position - transform.position).normalized;
-
-        // Calculate the desired rotation to face the player
         Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
-
-        // Smoothly rotate the enemy towards the player using RotateTowards
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 200f * Time.deltaTime); // Adjust '200f' to change speed
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 200f * Time.deltaTime);
     }
 
     private bool CanSeePlayer()
     {
-        RaycastHit hit;
         Vector3 directionToPlayer = player.position - transform.position;
 
-        if (Physics.Raycast(transform.position, directionToPlayer, out hit, sightRange))
+        if (Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, sightRange, ~obstructionMask))
             return hit.collider.CompareTag("Player");
 
         return false;
+    }
+
+    public void ForceDetectPlayer()
+    {
+        currentState = EnemyState.Hostile;
+        lostPlayerTimer = 0f;
+        gunController.OnPlayerDetected();
+        hasPlayedDetectSound = true;
+        PlaySound(detectSound);
     }
 
     #endregion

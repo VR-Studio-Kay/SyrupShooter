@@ -4108,6 +4108,16 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1202312658}
   m_CullTransparentMesh: 1
+--- !u!82 &1216992552 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 1585498729614890215, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
+  m_PrefabInstance: {fileID: 6170407830489417759}
+  m_PrefabAsset: {fileID: 0}
+--- !u!82 &1216992553 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 3804026601672083021, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
+  m_PrefabInstance: {fileID: 6170407830489417759}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1247873230
 GameObject:
   m_ObjectHideFlags: 0
@@ -8845,6 +8855,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 4454330341714781694}
   attackRange: 7.6
   sightRange: 8.61
+  attackCooldown: 3
   health: 100
   healthBar: {fileID: 5491722071705520051}
   patrolPoints: []
@@ -8858,6 +8869,9 @@ MonoBehaviour:
   pitchMin: 0.995
   pitchMax: 1.025
   gunController: {fileID: 8517802568449340616}
+  obstructionMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!114 &4934032446432824226
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9107,7 +9121,16 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3830455329474909942, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
       insertIndex: -1
       addedObject: {fileID: 141187865}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1603383309101027386, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6170407830489417765}
+    - targetCorrespondingSourceObject: {fileID: 1603383309101027386, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6170407830489417764}
+    - targetCorrespondingSourceObject: {fileID: 1603383309101027386, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6170407830489417763}
   m_SourcePrefab: {fileID: 100100000, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
 --- !u!114 &6170407830489417760 stripped
 MonoBehaviour:
@@ -9125,6 +9148,74 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3830455329474909942, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
   m_PrefabInstance: {fileID: 6170407830489417759}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &6170407830489417762 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1603383309101027386, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
+  m_PrefabInstance: {fileID: 6170407830489417759}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6170407830489417763
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6170407830489417762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23281576971ea4c4a8a75a6728286bce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activateAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Activate
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: a8928ad6-8711-4b9d-aaa8-93ae169430b4
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Id: cece45fd-4050-44c4-bd15-880bd1e39418
+        m_Path: <XRController>{RightHand}/{TriggerButton}
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Activate
+        m_Flags: 0
+      m_Flags: 0
+    m_Reference: {fileID: 0}
+--- !u!114 &6170407830489417764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6170407830489417762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc85ac72508b4884fb032a1a693d20af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shootSound: {fileID: 1216992552}
+  reloadSound: {fileID: 1216992553}
+  outOfAmmoClip: {fileID: 8300000, guid: 5d64fa4c8a0754f409c8ef08a28640c8, type: 3}
+  pitchVariationMin: 0.95
+  pitchVariationMax: 1.05
+--- !u!114 &6170407830489417765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6170407830489417762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc266256336400540a288160dad56874, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reloadAngleThreshold: 70
+  reloadCooldown: 2
 --- !u!114 &6241704281278919515
 MonoBehaviour:
   m_ObjectHideFlags: 0
