@@ -2,35 +2,51 @@
 using UnityEngine.Events;
 using System.Collections;
 
+[RequireComponent(typeof(GunAudioManager))]
+[DisallowMultipleComponent]
 public class GunControllerPlayer : MonoBehaviour
 {
     [Header("Gun Settings")]
-    public GameObject bulletPrefab;
-    public Transform firePoint;
-    public float bulletForce = 20f;
-    public float shootCooldown = 0.2f;
+    [SerializeField] private GameObject bulletPrefab;
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private float bulletForce = 20f;
+    [SerializeField] private float shootCooldown = 0.2f;
+
+    [Header("Muzzle Flash")]
+    [Tooltip("Optional muzzle flash effect played on shooting.")]
+    [SerializeField] private GameObject muzzleFlashPrefab;
+    [SerializeField] private Transform muzzleFlashPoint;
+    [SerializeField] private float muzzleFlashDuration = 0.05f;
 
     [Header("Ammo Settings")]
-    public int maxAmmo = 10;
-    [HideInInspector] public int currentAmmo;
-    public UnityEvent<int> onAmmoChanged;
+    [SerializeField] private int maxAmmo = 10;
+    [SerializeField] private UnityEvent<int> onAmmoChanged;
 
-    [HideInInspector] public bool canShoot = true;
+    public int CurrentAmmo { get; private set; }
+    public int MaxAmmo => maxAmmo;
+    public bool CanShoot { get; private set; } = true;
 
     private GunAudioManager audioManager;
+    private GunUIManager uiManager;
+
+    private void Awake()
+    {
+        audioManager = GetComponent<GunAudioManager>();
+        uiManager = GetComponent<GunUIManager>();
+    }
 
     private void Start()
     {
-        currentAmmo = maxAmmo;
-        onAmmoChanged?.Invoke(currentAmmo);
-        audioManager = GetComponent<GunAudioManager>();
+        CurrentAmmo = maxAmmo;
+        onAmmoChanged?.Invoke(CurrentAmmo);
     }
 
     public void TryFire()
     {
-        if (!canShoot || currentAmmo <= 0)
+        if (!CanShoot || CurrentAmmo <= 0)
         {
             audioManager?.PlayOutOfAmmo();
+            uiManager?.ShowOutOfAmmo();
             return;
         }
 
@@ -39,29 +55,37 @@ public class GunControllerPlayer : MonoBehaviour
 
     private void Fire()
     {
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-        Rigidbody rb = bullet.GetComponent<Rigidbody>();
-        rb.linearVelocity = firePoint.forward * bulletForce;
+        if (!bulletPrefab || !firePoint) return;
 
-        currentAmmo--;
-        onAmmoChanged?.Invoke(currentAmmo);
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        if (bullet.TryGetComponent<Rigidbody>(out Rigidbody rb))
+        {
+            rb.linearVelocity = firePoint.forward * bulletForce;
+        }
+
+        CurrentAmmo--;
+        onAmmoChanged?.Invoke(CurrentAmmo);
         StartCoroutine(ShootCooldown());
         audioManager?.PlayShoot();
+
+        if (muzzleFlashPrefab && muzzleFlashPoint)
+        {
+            GameObject flash = Instantiate(muzzleFlashPrefab, muzzleFlashPoint.position, muzzleFlashPoint.rotation, muzzleFlashPoint);
+            Destroy(flash, muzzleFlashDuration);
+        }
     }
 
     private IEnumerator ShootCooldown()
     {
-        canShoot = false;
+        CanShoot = false;
         yield return new WaitForSeconds(shootCooldown);
-        canShoot = true;
+        CanShoot = true;
     }
 
     public void Reload()
     {
-        currentAmmo = maxAmmo;
-        onAmmoChanged?.Invoke(currentAmmo);
+        CurrentAmmo = maxAmmo;
+        onAmmoChanged?.Invoke(CurrentAmmo);
         audioManager?.PlayReload();
     }
-
-    public int GetCurrentAmmo() => currentAmmo;
 }

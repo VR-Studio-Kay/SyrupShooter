@@ -43,7 +43,6 @@ public class EnemyAIController : MonoBehaviour
     [SerializeField] private AudioClip deathSound;
     [Range(0.8f, 1.2f)] public float pitchMin = 0.95f;
     [Range(0.8f, 1.2f)] public float pitchMax = 1.05f;
-
     private bool hasPlayedDetectSound = false;
 
     [Header("Gun")]
@@ -51,12 +50,11 @@ public class EnemyAIController : MonoBehaviour
 
     [Header("Vision Settings")]
     [SerializeField] private LayerMask obstructionMask;
+    [SerializeField, Range(0, 360)] private float fieldOfViewAngle = 110f;
 
     private Animator animator;
 
     #endregion
-
-    #region Unity Methods
 
     private void Start()
     {
@@ -95,7 +93,6 @@ public class EnemyAIController : MonoBehaviour
                 enemyPatrol.enabled = true;
                 gunController.OnPlayerLost();
                 hasPlayedDetectSound = false;
-                Debug.Log("Enemy returning to patrol.");
             }
         }
 
@@ -103,65 +100,19 @@ public class EnemyAIController : MonoBehaviour
         {
             case EnemyState.Patrol:
                 enemyPatrol.enabled = true;
-                animator?.SetBool("IsMoving", false);
+                animator?.SetBool("IsMoving", true);
                 break;
 
             case EnemyState.Hostile:
+                enemyPatrol.enabled = false;
                 HandleHostileState(distanceToPlayer);
                 break;
         }
     }
 
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, sightRange);
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (player != null)
-        {
-            Gizmos.color = Color.blue;
-            Gizmos.DrawLine(transform.position, player.position);
-        }
-    }
-
-    #endregion
-
-    #region Initialization
-
-    private void InitializeComponents()
-    {
-        agent = GetComponent<NavMeshAgent>();
-        enemyPatrol = GetComponent<EnemyPatrol>();
-        animator = GetComponent<Animator>();
-
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-            player = playerObj.transform;
-
-        whatIsGround = LayerMask.GetMask("WhatIsGround");
-
-        maxHealth = health;
-        healthBar?.SetMaxHealth(maxHealth);
-
-        if (enemyPatrol != null && patrolPoints.Length > 0)
-            enemyPatrol.SetPatrolPoints(patrolPoints);
-
-        if (audioSource == null)
-            audioSource = GetComponent<AudioSource>();
-    }
-
-    #endregion
-
-    #region Behavior Logic
-
     private void HandleHostileState(float distanceToPlayer)
     {
-        if (distanceToPlayer < attackRange && distanceToPlayer >= safeDistance && !alreadyAttacked)
+        if (distanceToPlayer < attackRange && distanceToPlayer >= safeDistance && !alreadyAttacked && CanSeePlayer())
         {
             alreadyAttacked = true;
             gunController.Fire();
@@ -183,10 +134,10 @@ public class EnemyAIController : MonoBehaviour
 
     private void MoveAwayFromPlayer()
     {
-        Vector3 directionAwayFromPlayer = (transform.position - player.position).normalized;
-        Vector3 targetPos = transform.position + directionAwayFromPlayer * safeDistance;
+        Vector3 directionAway = (transform.position - player.position).normalized;
+        Vector3 retreatPosition = transform.position + directionAway * safeDistance;
 
-        if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(retreatPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
         {
             agent.SetDestination(hit.position);
         }
@@ -202,33 +153,46 @@ public class EnemyAIController : MonoBehaviour
     {
         if (player == null) return;
 
-        Vector3 directionToPlayer = (player.position - transform.position).normalized;
-        Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 200f * Time.deltaTime);
+        Vector3 direction = (player.position - transform.position).normalized;
+        Quaternion rotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 5f * Time.deltaTime);
     }
 
     private bool CanSeePlayer()
     {
-        Vector3 directionToPlayer = player.position - transform.position;
+        Vector3 direction = (player.position - transform.position).normalized;
+        float angle = Vector3.Angle(transform.forward, direction);
 
-        if (Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, sightRange, ~obstructionMask))
-            return hit.collider.CompareTag("Player");
-
+        if (angle < fieldOfViewAngle * 0.5f)
+        {
+            if (Physics.Raycast(transform.position + Vector3.up, direction, out RaycastHit hit, sightRange, ~obstructionMask))
+            {
+                return hit.collider.CompareTag("Player");
+            }
+        }
         return false;
     }
 
-    public void ForceDetectPlayer()
+    private void InitializeComponents()
     {
-        currentState = EnemyState.Hostile;
-        lostPlayerTimer = 0f;
-        gunController.OnPlayerDetected();
-        hasPlayedDetectSound = true;
-        PlaySound(detectSound);
+        agent = GetComponent<NavMeshAgent>();
+        enemyPatrol = GetComponent<EnemyPatrol>();
+        animator = GetComponent<Animator>();
+
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+            player = playerObj.transform;
+
+        whatIsGround = LayerMask.GetMask("WhatIsGround");
+        maxHealth = health;
+        healthBar?.SetMaxHealth(maxHealth);
+
+        if (enemyPatrol != null && patrolPoints.Length > 0)
+            enemyPatrol.SetPatrolPoints(patrolPoints);
+
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
     }
-
-    #endregion
-
-    #region Health
 
     public void TakeDamage(int damage)
     {
@@ -243,37 +207,27 @@ public class EnemyAIController : MonoBehaviour
     private void DestroyEnemy()
     {
         agent.enabled = false;
-        Collider mainCollider = GetComponent<Collider>();
-        if (mainCollider != null) mainCollider.enabled = false;
+        if (TryGetComponent<Collider>(out var col))
+            col.enabled = false;
 
         PlaySound(deathSound);
         Destroy(gameObject, 2f);
     }
 
-    #endregion
-
-    #region Visual Feedback
-
     public void ChangeColor(Color newColor)
     {
-        Renderer enemyRenderer = GetComponent<Renderer>();
-        if (enemyRenderer != null)
+        if (TryGetComponent<Renderer>(out var rend))
         {
-            enemyRenderer.material.color = newColor;
+            rend.material.color = newColor;
             Invoke(nameof(ResetColor), 0.2f);
         }
     }
 
     private void ResetColor()
     {
-        Renderer enemyRenderer = GetComponent<Renderer>();
-        if (enemyRenderer != null)
-            enemyRenderer.material.color = Color.red;
+        if (TryGetComponent<Renderer>(out var rend))
+            rend.material.color = Color.red;
     }
-
-    #endregion
-
-    #region Audio Helper
 
     private void PlaySound(AudioClip clip)
     {
@@ -284,14 +238,17 @@ public class EnemyAIController : MonoBehaviour
         }
     }
 
-    #endregion
-
-    #region Reset Attack
-
     private void ResetAttack()
     {
         alreadyAttacked = false;
     }
 
-    #endregion
+    public void ForceDetectPlayer()
+    {
+        currentState = EnemyState.Hostile;
+        lostPlayerTimer = 0f;
+        gunController.OnPlayerDetected();
+        hasPlayedDetectSound = true;
+        PlaySound(detectSound);
+    }
 }
