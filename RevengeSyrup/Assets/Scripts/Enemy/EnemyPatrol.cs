@@ -3,53 +3,36 @@ using UnityEngine.AI;
 
 public class EnemyPatrol : MonoBehaviour
 {
-    [Header("Patrol Settings")]
     [SerializeField] private Transform[] patrolPoints;
-    [SerializeField] private float waitTimeAtPoint = 2f;
-
+    private int currentPointIndex = 0;
     private NavMeshAgent agent;
-    private int currentIndex = 0;
-    private float waitTimer = 0f;
-    private bool waiting = false;
 
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         if (patrolPoints.Length > 0)
-            agent.SetDestination(patrolPoints[currentIndex].position);
+            agent.SetDestination(patrolPoints[currentPointIndex].position);
     }
 
     private void Update()
     {
-        if (patrolPoints.Length == 0) return;
+        if (patrolPoints.Length == 0 || agent.pathPending) return;
 
-        if (!waiting && Vector3.Distance(transform.position, patrolPoints[currentIndex].position) < 1f)
+        if (agent.remainingDistance <= agent.stoppingDistance)
         {
-            waiting = true;
-            waitTimer = 0f;
+            currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
+            agent.SetDestination(patrolPoints[currentPointIndex].position);
         }
 
-        if (waiting)
-        {
-            waitTimer += Time.deltaTime;
-            if (waitTimer >= waitTimeAtPoint)
-            {
-                currentIndex = (currentIndex + 1) % patrolPoints.Length;
-                agent.SetDestination(patrolPoints[currentIndex].position);
-                waiting = false;
-            }
-        }
-        else
-        {
-            agent.SetDestination(patrolPoints[currentIndex].position);
-        }
+        FaceMovementDirection();
     }
 
-    public void SetPatrolPoints(Transform[] points)
+    private void FaceMovementDirection()
     {
-        patrolPoints = points;
-        currentIndex = 0;
-        if (agent != null && patrolPoints.Length > 0)
-            agent.SetDestination(patrolPoints[currentIndex].position);
+        if (agent.velocity.sqrMagnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(agent.velocity.normalized);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+        }
     }
 }

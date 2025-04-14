@@ -2277,7 +2277,6 @@ MonoBehaviour:
   - {fileID: 1339146921027331490}
   - {fileID: 1612519421530455950}
   - {fileID: 1127498185615274590}
-  waitTimeAtPoint: 2
 --- !u!1 &464331401
 GameObject:
   m_ObjectHideFlags: 0
@@ -9259,28 +9258,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f0ca7acf94692e41b8929c07b37fec3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  projectile: {fileID: 2733614829565478642, guid: 0ab83842e16cf6643973a9d807fd1f0e, type: 3}
-  spawnPoint: {fileID: 4454330341714781694}
-  attackRange: 7.6
   sightRange: 8.61
-  attackCooldown: 3
-  health: 100
-  healthBar: {fileID: 5491722071705520051}
-  patrolPoints: []
-  returnToPatrolDistance: 10.02
-  safeDistance: 5
-  timeToForgetPlayer: 2.18
-  audioSource: {fileID: 8517802568449340615}
-  detectSound: {fileID: 8300000, guid: cbd06d02f894b8c4e93a78d6463baaa7, type: 3}
-  attackSound: {fileID: 0}
-  deathSound: {fileID: 0}
-  pitchMin: 0.995
-  pitchMax: 1.025
-  gunController: {fileID: 8517802568449340616}
+  fieldOfViewAngle: 101
   obstructionMask:
     serializedVersion: 2
     m_Bits: 0
-  fieldOfViewAngle: 101
+  stoppingDistance: 8
+  attackRange: 7.6
+  attackCooldown: 3
+  enemyPatrol: {fileID: 445113117}
+  gunController: {fileID: 8517802568449340616}
 --- !u!114 &4934032446432824226
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9494,7 +9481,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3299293548180649343, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6563903555261858316, guid: f0691c31f9417c34e948a0ebae8d6214, type: 3}
       propertyPath: outOfAmmoClip

@@ -1,254 +1,98 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyAIController : MonoBehaviour
 {
-    #region Fields
+    [Header("Detection")]
+    [SerializeField] private float sightRange = 15f;
+    [SerializeField] private float fov = 110f;
+    [SerializeField] private LayerMask obstructionMask;
 
-    [Header("Combat Settings")]
-    [SerializeField] private GameObject projectile;
-    [SerializeField] private Transform spawnPoint;
-    [SerializeField] private float attackRange = 2f;
-    [SerializeField] private float sightRange = 5f;
-    [SerializeField] private float attackCooldown = 3f;
+    [Header("Combat")]
+    [SerializeField] private float attackRange = 10f;
+    [SerializeField] private float attackCooldown = 2f;
 
-    [Header("Health Settings")]
-    [SerializeField] private int health = 100;
-    private int maxHealth;
-    [SerializeField] private EnemyHealthBar healthBar;
+    [Header("References")]
+    [SerializeField] private EnemyPatrol patrolScript;
+    [SerializeField] private GunController gun;
 
-    [Header("AI Settings")]
     private NavMeshAgent agent;
     private Transform player;
-    private bool alreadyAttacked;
-    private LayerMask whatIsGround;
-
-    [Header("Patrol Settings")]
-    [SerializeField] private Transform[] patrolPoints;
-    private EnemyPatrol enemyPatrol;
-
-    [Header("AI State Settings")]
-    [SerializeField] private float returnToPatrolDistance = 10f;
-    private float lostPlayerTimer = 0f;
-    [SerializeField] private float safeDistance = 3f;
-    [SerializeField] private float timeToForgetPlayer = 5f;
-    private enum EnemyState { Patrol, Hostile }
-    private EnemyState currentState = EnemyState.Patrol;
-
-    [Header("Audio Settings")]
-    [SerializeField] private AudioSource audioSource;
-    [SerializeField] private AudioClip detectSound;
-    [SerializeField] private AudioClip attackSound;
-    [SerializeField] private AudioClip deathSound;
-    [Range(0.8f, 1.2f)] public float pitchMin = 0.95f;
-    [Range(0.8f, 1.2f)] public float pitchMax = 1.05f;
-    private bool hasPlayedDetectSound = false;
-
-    [Header("Gun")]
-    [SerializeField] private GunController gunController;
-
-    [Header("Vision Settings")]
-    [SerializeField] private LayerMask obstructionMask;
-    [SerializeField, Range(0, 360)] private float fieldOfViewAngle = 110f;
-
-    private Animator animator;
-
-    #endregion
+    private bool isPlayerVisible = false;
+    private float cooldown = 0f;
 
     private void Start()
     {
-        InitializeComponents();
+        agent = GetComponent<NavMeshAgent>();
+        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        if (patrolScript != null)
+            patrolScript.enabled = true;
     }
 
     private void Update()
     {
-        if (player == null)
+        if (player == null) return;
+
+        cooldown -= Time.deltaTime;
+
+        if (IsPlayerInSight())
         {
-            currentState = EnemyState.Patrol;
-            return;
-        }
-
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-
-        if (distanceToPlayer < sightRange && CanSeePlayer())
-        {
-            currentState = EnemyState.Hostile;
-            lostPlayerTimer = 0f;
-
-            if (!hasPlayedDetectSound)
+            if (!isPlayerVisible)
             {
-                PlaySound(detectSound);
-                hasPlayedDetectSound = true;
+                isPlayerVisible = true;
+                if (patrolScript != null) patrolScript.enabled = false;
+                gun.OnPlayerDetected();
             }
 
-            gunController.OnPlayerDetected();
-        }
-        else if (currentState == EnemyState.Hostile)
-        {
-            lostPlayerTimer += Time.deltaTime;
-            if (lostPlayerTimer >= timeToForgetPlayer || distanceToPlayer > returnToPatrolDistance)
+            agent.SetDestination(player.position);
+            FacePlayer();
+
+            if (Vector3.Distance(transform.position, player.position) <= attackRange && cooldown <= 0f)
             {
-                currentState = EnemyState.Patrol;
-                enemyPatrol.enabled = true;
-                gunController.OnPlayerLost();
-                hasPlayedDetectSound = false;
+                gun.Fire();
+                cooldown = attackCooldown;
             }
-        }
-
-        switch (currentState)
-        {
-            case EnemyState.Patrol:
-                enemyPatrol.enabled = true;
-                animator?.SetBool("IsMoving", true);
-                break;
-
-            case EnemyState.Hostile:
-                enemyPatrol.enabled = false;
-                HandleHostileState(distanceToPlayer);
-                break;
-        }
-    }
-
-    private void HandleHostileState(float distanceToPlayer)
-    {
-        if (distanceToPlayer < attackRange && distanceToPlayer >= safeDistance && !alreadyAttacked && CanSeePlayer())
-        {
-            alreadyAttacked = true;
-            gunController.Fire();
-            PlaySound(attackSound);
-            Invoke(nameof(ResetAttack), attackCooldown);
-        }
-        else if (distanceToPlayer < safeDistance)
-        {
-            MoveAwayFromPlayer();
         }
         else
         {
-            ChasePlayer();
-        }
-
-        animator?.SetBool("IsMoving", true);
-        LookAtPlayer();
-    }
-
-    private void MoveAwayFromPlayer()
-    {
-        Vector3 directionAway = (transform.position - player.position).normalized;
-        Vector3 retreatPosition = transform.position + directionAway * safeDistance;
-
-        if (NavMesh.SamplePosition(retreatPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
-        {
-            agent.SetDestination(hit.position);
-        }
-    }
-
-    private void ChasePlayer()
-    {
-        if (player != null)
-            agent.SetDestination(player.position);
-    }
-
-    private void LookAtPlayer()
-    {
-        if (player == null) return;
-
-        Vector3 direction = (player.position - transform.position).normalized;
-        Quaternion rotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 5f * Time.deltaTime);
-    }
-
-    private bool CanSeePlayer()
-    {
-        Vector3 direction = (player.position - transform.position).normalized;
-        float angle = Vector3.Angle(transform.forward, direction);
-
-        if (angle < fieldOfViewAngle * 0.5f)
-        {
-            if (Physics.Raycast(transform.position + Vector3.up, direction, out RaycastHit hit, sightRange, ~obstructionMask))
+            if (isPlayerVisible)
             {
+                isPlayerVisible = false;
+                if (patrolScript != null) patrolScript.enabled = true;
+                gun.OnPlayerLost();
+            }
+        }
+    }
+
+    private bool IsPlayerInSight()
+    {
+        Vector3 dirToPlayer = (player.position - transform.position).normalized;
+        float angle = Vector3.Angle(transform.forward, dirToPlayer);
+
+        if (angle < fov / 2f)
+        {
+            Vector3 origin = transform.position + Vector3.up;
+            Vector3 destination = player.position + Vector3.up;
+
+            if (Physics.Raycast(origin, destination - origin, out RaycastHit hit, sightRange, ~obstructionMask))
+            {
+                Debug.DrawRay(origin, destination - origin, Color.red);
                 return hit.collider.CompareTag("Player");
             }
         }
+
         return false;
     }
 
-    private void InitializeComponents()
+    private void FacePlayer()
     {
-        agent = GetComponent<NavMeshAgent>();
-        enemyPatrol = GetComponent<EnemyPatrol>();
-        animator = GetComponent<Animator>();
-
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
-            player = playerObj.transform;
-
-        whatIsGround = LayerMask.GetMask("WhatIsGround");
-        maxHealth = health;
-        healthBar?.SetMaxHealth(maxHealth);
-
-        if (enemyPatrol != null && patrolPoints.Length > 0)
-            enemyPatrol.SetPatrolPoints(patrolPoints);
-
-        if (audioSource == null)
-            audioSource = GetComponent<AudioSource>();
-    }
-
-    public void TakeDamage(int damage)
-    {
-        health -= damage;
-        ChangeColor(Color.yellow);
-        healthBar?.SetHealth(health);
-
-        if (health <= 0)
-            DestroyEnemy();
-    }
-
-    private void DestroyEnemy()
-    {
-        agent.enabled = false;
-        if (TryGetComponent<Collider>(out var col))
-            col.enabled = false;
-
-        PlaySound(deathSound);
-        Destroy(gameObject, 2f);
-    }
-
-    public void ChangeColor(Color newColor)
-    {
-        if (TryGetComponent<Renderer>(out var rend))
+        Vector3 direction = (player.position - transform.position).normalized;
+        direction.y = 0;
+        if (direction != Vector3.zero)
         {
-            rend.material.color = newColor;
-            Invoke(nameof(ResetColor), 0.2f);
+            Quaternion rotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 5f);
         }
-    }
-
-    private void ResetColor()
-    {
-        if (TryGetComponent<Renderer>(out var rend))
-            rend.material.color = Color.red;
-    }
-
-    private void PlaySound(AudioClip clip)
-    {
-        if (audioSource != null && clip != null)
-        {
-            audioSource.pitch = Random.Range(pitchMin, pitchMax);
-            audioSource.PlayOneShot(clip);
-        }
-    }
-
-    private void ResetAttack()
-    {
-        alreadyAttacked = false;
-    }
-
-    public void ForceDetectPlayer()
-    {
-        currentState = EnemyState.Hostile;
-        lostPlayerTimer = 0f;
-        gunController.OnPlayerDetected();
-        hasPlayedDetectSound = true;
-        PlaySound(detectSound);
     }
 }
