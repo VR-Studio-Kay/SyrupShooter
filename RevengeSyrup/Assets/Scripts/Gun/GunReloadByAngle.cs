@@ -6,6 +6,8 @@ public class GunReloadByAngle : MonoBehaviour
     [Header("Reload Settings")]
     [SerializeField] private float reloadAngleThreshold = 70f;
     [SerializeField] private float reloadCooldown = 2f;
+    [Tooltip("Optional: Assign this if the controller is a separate object (like an XR Controller)")]
+    [SerializeField] private Transform controllerTransform;
 
     private float lastReloadTime;
     private GunControllerPlayer gunController;
@@ -15,12 +17,18 @@ public class GunReloadByAngle : MonoBehaviour
         gunController = GetComponent<GunControllerPlayer>();
         if (!gunController)
         {
-            Debug.LogWarning("GunControllerPlayer component not found on this GameObject.");
+            Debug.LogWarning("[GunReloadByAngle] GunControllerPlayer component not found on this GameObject.");
+        }
+
+        if (controllerTransform == null)
+        {
+            controllerTransform = transform; // fallback to self if not assigned
         }
     }
 
     private void Update()
     {
+        Debug.Log("[GunReloadByAngle] Update running."); // Confirm it's active
         CheckReloadByAngle();
     }
 
@@ -28,18 +36,19 @@ public class GunReloadByAngle : MonoBehaviour
     {
         if (gunController == null) return;
 
-        // Debug the current rotation values of the controller
-        Vector3 localRotation = transform.localEulerAngles;
-        Debug.Log($"[Reload Debug] Rotation - X: {localRotation.x:F2}, Y: {localRotation.y:F2}, Z: {localRotation.z:F2}");
+        float xRotation = controllerTransform.localEulerAngles.x;
 
-        float xRotation = localRotation.x;
+        // Convert to -180 to +180 range
         if (xRotation > 180f)
             xRotation -= 360f;
+
+        Debug.Log($"[Reload Debug] Controller X Rotation: {xRotation:F2}°");
 
         if (Mathf.Abs(xRotation) >= reloadAngleThreshold && gunController.CurrentAmmo < gunController.MaxAmmo)
         {
             if (Time.time - lastReloadTime > reloadCooldown)
             {
+                Debug.Log("[GunReloadByAngle] Reload conditions met. Reloading...");
                 lastReloadTime = Time.time;
                 gunController.Reload();
             }

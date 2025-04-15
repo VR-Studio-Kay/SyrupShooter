@@ -3545,7 +3545,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6324100282127811073, guid: f4ea330c65b2b4d48aedee7565654b72, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.2151
+      value: 0.021
       objectReference: {fileID: 0}
     - target: {fileID: 6324100282127811073, guid: f4ea330c65b2b4d48aedee7565654b72, type: 3}
       propertyPath: m_LocalRotation.w
@@ -9259,15 +9259,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sightRange: 8.61
-  fieldOfViewAngle: 101
+  fov: 110
   obstructionMask:
     serializedVersion: 2
     m_Bits: 0
-  stoppingDistance: 8
   attackRange: 7.6
   attackCooldown: 3
-  enemyPatrol: {fileID: 445113117}
-  gunController: {fileID: 8517802568449340616}
+  patrolScript: {fileID: 0}
+  gun: {fileID: 0}
 --- !u!114 &4934032446432824226
 MonoBehaviour:
   m_ObjectHideFlags: 0
