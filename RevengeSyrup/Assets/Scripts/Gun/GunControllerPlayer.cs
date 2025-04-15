@@ -1,91 +1,65 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
-using System.Collections;
 
-[RequireComponent(typeof(GunAudioManager))]
-[DisallowMultipleComponent]
+[System.Serializable]
+public class IntEvent : UnityEvent<int> { }
+
 public class GunControllerPlayer : MonoBehaviour
 {
-    [Header("Gun Settings")]
-    [SerializeField] private GameObject bulletPrefab;
-    [SerializeField] private Transform firePoint;
-    [SerializeField] private float bulletForce = 20f;
-    [SerializeField] private float shootCooldown = 0.2f;
-
-    [Header("Muzzle Flash")]
-    [Tooltip("Optional muzzle flash effect played on shooting.")]
-    [SerializeField] private GameObject muzzleFlashPrefab;
-    [SerializeField] private Transform muzzleFlashPoint;
-    [SerializeField] private float muzzleFlashDuration = 0.05f;
-
     [Header("Ammo Settings")]
     [SerializeField] private int maxAmmo = 10;
-    [SerializeField] private UnityEvent<int> onAmmoChanged;
+    private int currentAmmo;
 
-    public int CurrentAmmo { get; private set; }
+    [Header("Shooting Settings")]
+    [SerializeField] private GameObject muzzleFlashPrefab;
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private float fireRate = 0.5f;
+    private float nextFireTime = 0f;
+
+    [Header("Reload Settings")]
+    [SerializeField] private float reloadCooldown = 2f;
+    private float lastReloadTime = 0f;
+
+    public IntEvent OnAmmoChanged = new IntEvent();
+
+    public int CurrentAmmo => currentAmmo;
     public int MaxAmmo => maxAmmo;
-    public bool CanShoot { get; private set; } = true;
-
-    private GunAudioManager audioManager;
-    private GunUIManager uiManager;
-
-    private void Awake()
-    {
-        audioManager = GetComponent<GunAudioManager>();
-        uiManager = GetComponent<GunUIManager>();
-    }
 
     private void Start()
     {
-        CurrentAmmo = maxAmmo;
-        onAmmoChanged?.Invoke(CurrentAmmo);
+        currentAmmo = maxAmmo;
+        OnAmmoChanged?.Invoke(currentAmmo);
     }
 
     public void TryFire()
     {
-        if (!CanShoot || CurrentAmmo <= 0)
-        {
-            audioManager?.PlayOutOfAmmo();
-            uiManager?.ShowOutOfAmmo();
+        if (Time.time < nextFireTime || currentAmmo <= 0)
             return;
-        }
 
         Fire();
     }
 
     private void Fire()
     {
-        if (!bulletPrefab || !firePoint) return;
+        currentAmmo--;
+        OnAmmoChanged?.Invoke(currentAmmo);
+        nextFireTime = Time.time + fireRate;
 
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-        if (bullet.TryGetComponent<Rigidbody>(out Rigidbody rb))
+        if (muzzleFlashPrefab && firePoint)
         {
-            rb.linearVelocity = firePoint.forward * bulletForce;
+            Instantiate(muzzleFlashPrefab, firePoint.position, firePoint.rotation);
         }
 
-        CurrentAmmo--;
-        onAmmoChanged?.Invoke(CurrentAmmo);
-        StartCoroutine(ShootCooldown());
-        audioManager?.PlayShoot();
-
-        if (muzzleFlashPrefab && muzzleFlashPoint)
-        {
-            GameObject flash = Instantiate(muzzleFlashPrefab, muzzleFlashPoint.position, muzzleFlashPoint.rotation, muzzleFlashPoint);
-            Destroy(flash, muzzleFlashDuration);
-        }
-    }
-
-    private IEnumerator ShootCooldown()
-    {
-        CanShoot = false;
-        yield return new WaitForSeconds(shootCooldown);
-        CanShoot = true;
+        // Additional shooting logic (e.g., raycasting, sound effects) can be added here.
     }
 
     public void Reload()
     {
-        CurrentAmmo = maxAmmo;
-        onAmmoChanged?.Invoke(CurrentAmmo);
-        audioManager?.PlayReload();
+        if (Time.time - lastReloadTime < reloadCooldown || currentAmmo == maxAmmo)
+            return;
+
+        currentAmmo = maxAmmo;
+        lastReloadTime = Time.time;
+        OnAmmoChanged?.Invoke(currentAmmo);
     }
 }
