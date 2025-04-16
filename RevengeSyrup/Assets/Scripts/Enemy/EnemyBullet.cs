@@ -32,7 +32,7 @@ public class EnemyBullet : MonoBehaviour
             {
                 // Call TakeDamage method on the player and log the damage
                 playerHealth.TakeDamage(damage);
-                Debug.Log($"[EnemyBullet] Player hit! -{damage} HP | Remaining: {playerHealth.GetCurrentHealth()}");
+                Debug.Log($"[EnemyBullet] Player hit! -{damage} HP | Remaining: {playerHealth.CurrentHealth}");
 
                 // Optional: Blood screen or hit feedback
                 if (bloodEffectPrefab != null)

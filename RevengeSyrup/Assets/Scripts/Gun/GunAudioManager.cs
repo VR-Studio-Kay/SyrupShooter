@@ -17,8 +17,13 @@ public class GunAudioManager : MonoBehaviour
     {
         if (shootSound)
         {
+            Debug.Log("Playing shoot sound");
             shootSound.pitch = Random.Range(pitchVariationMin, pitchVariationMax);
             shootSound.Play();
+        }
+        else
+        {
+            Debug.LogWarning("Shoot sound AudioSource is not assigned.");
         }
     }
 
@@ -36,6 +41,14 @@ public class GunAudioManager : MonoBehaviour
         if (outOfAmmoClip && shootSound)
         {
             shootSound.PlayOneShot(outOfAmmoClip);
+        }
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            shootSound.Play();
         }
     }
 }

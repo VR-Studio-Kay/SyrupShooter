@@ -1,6 +1,6 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
@@ -75,12 +75,8 @@ public class PlayerHealth : MonoBehaviour
         currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
+        // Optional: Play healing sound or visual feedback here
         Debug.Log($"[PlayerHealth] Healed {amount}. Current HP: {currentHealth}");
-
-        if (healSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(healSound);
-        }
 
         if (healthBarSlider != null)
             healthBarSlider.value = CalculateHealthPercentage();
@@ -149,5 +145,4 @@ public class PlayerHealth : MonoBehaviour
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
     }
-
 }

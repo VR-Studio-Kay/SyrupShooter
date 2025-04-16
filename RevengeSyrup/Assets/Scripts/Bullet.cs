@@ -19,7 +19,7 @@ public class Bullet : MonoBehaviour
     public LayerMask WhatIsEnemy;
 
     [Header("Effects")]
-    public GameObject impactEffect;
+    public ParticleSystem impactEffect; // Optional: Impact effect (like a prefab or particle system)
     public AudioClip hitSound;
 
     [Header("Impact Force")]
@@ -32,6 +32,9 @@ public class Bullet : MonoBehaviour
 
     private AudioSource audioSource;
     private bool hasImpacted = false;
+
+    // Public ParticleSystem field for Inspector assignment
+    public ParticleSystem impactParticleSystem; // Particle system for impact effect
 
     private void Awake()
     {
@@ -95,11 +98,17 @@ public class Bullet : MonoBehaviour
             other.attachedRigidbody.AddForce(direction * knockbackForce, forceMode);
         }
 
-        // Impact effect
+        // Impact effect (particle system)
+        if (impactParticleSystem != null)
+        {
+            // Play the particle system at the bullet's impact position
+            Instantiate(impactParticleSystem, transform.position, Quaternion.LookRotation(-transform.forward));
+        }
+
+        // Impact effect (alternative, if using impactEffect GameObject)
         if (impactEffect != null)
         {
-            GameObject fx = Instantiate(impactEffect, transform.position, Quaternion.LookRotation(-transform.forward));
-            Destroy(fx, 2f);
+            Instantiate(impactEffect, transform.position, Quaternion.LookRotation(-transform.forward));
         }
 
         // Sound
