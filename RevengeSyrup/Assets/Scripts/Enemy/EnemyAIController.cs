@@ -35,6 +35,7 @@ public class EnemyAIController : MonoBehaviour
         if (player == null) return;
 
         cooldown -= Time.deltaTime;
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
         if (IsPlayerInSight())
         {
@@ -45,10 +46,27 @@ public class EnemyAIController : MonoBehaviour
                 gun.OnPlayerDetected();
             }
 
-            agent.SetDestination(player.position);
+            // Maintain distance from player
+            if (distanceToPlayer > attackRange)
+            {
+                // Move toward the player, but stop when close enough
+                Vector3 direction = (transform.position - player.position).normalized;
+                Vector3 targetPosition = player.position + direction * attackRange;
+
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(targetPosition, out hit, 2f, NavMesh.AllAreas))
+                {
+                    agent.SetDestination(hit.position);
+                }
+            }
+            else
+            {
+                agent.SetDestination(transform.position); // stop moving
+            }
+
             FacePlayer();
 
-            if (Vector3.Distance(transform.position, player.position) <= attackRange && cooldown <= 0f)
+            if (distanceToPlayer <= attackRange && cooldown <= 0f)
             {
                 gun.Fire();
                 cooldown = attackCooldown;
