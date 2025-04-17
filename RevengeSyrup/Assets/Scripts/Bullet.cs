@@ -4,14 +4,6 @@ using System.Collections;
 [RequireComponent(typeof(AudioSource))]
 public class Bullet : MonoBehaviour
 {
-    [Header("intro")]
-    public Animator WagonAnimator;
-    public Animator TunnelAnimator;
-    public GameObject start;
-    public GameObject title;
-    public GameObject porte;
-    public GameObject introTrigger;
-
     [Header("Stats")]
     public int baseDamage = 40;
     public float lifetime = 5f;
@@ -43,12 +35,6 @@ public class Bullet : MonoBehaviour
 
     // Public ParticleSystem field for Inspector assignment
     public ParticleSystem impactParticleSystem; // Particle system for impact effect
-
-    void Start()
-    {
-        WagonAnimator.SetFloat("speed", 0);
-	    TunnelAnimator.GetComponent<Animator>().Play("tunnel_intro");
-    }
 
     private void Awake()
     {
@@ -95,15 +81,6 @@ public class Bullet : MonoBehaviour
         if (other.CompareTag("CriticalHitZone")) // Optional critical zone (like a head)
         {
             finalDamage = Mathf.RoundToInt(baseDamage * 1.5f); // 50% bonus damage
-        }
-
-        if(other.tag == "introTrigger"){
-	        WagonAnimator.SetFloat("speed", 1);
-            TunnelAnimator.GetComponent<Animator>().enabled = false;
-            porte.SetActive(false);
-            start.SetActive(false);
-            title.SetActive(true);
-            introTrigger.SetActive(false);
         }
 
         if (other.TryGetComponent(out EnemyHealth enemy))
