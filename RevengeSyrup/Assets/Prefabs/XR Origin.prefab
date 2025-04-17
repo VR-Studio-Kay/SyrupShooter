@@ -5339,6 +5339,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7833474748516989827}
+  - {fileID: 6424488228153417030}
   m_Father: {fileID: 90981921989728917}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &5343318207608421432
@@ -7541,17 +7542,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5328830947113341990}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 1.77}
-  m_LocalScale: {x: 0.098433, y: 0.098433, z: 0.098433}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 1.1007928}
+  m_LocalScale: {x: 0.03700273, y: 0.15107727, z: 0.06121714}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 157606192731172614}
-  m_Father: {fileID: 8145617361569680401}
+  m_Father: {fileID: 6793255232801947211}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -0.38943994}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &1809053737768240747
@@ -12623,7 +12624,6 @@ Transform:
   m_LocalScale: {x: 0.37591794, y: 1.5348233, z: 0.62191683}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 6424488228153417030}
   - {fileID: 8819252685148718950}
   m_Father: {fileID: 4407561403306539903}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -12649,6 +12649,12 @@ MonoBehaviour:
   healthBarSlider: {fileID: 0}
   gameOverCanvas: {fileID: 0}
   resetCheckpointButton: {fileID: 0}
+  fadeCanvasGroup: {fileID: 0}
+  fadeSpeed: 1
+  leftController: {fileID: 0}
+  rightController: {fileID: 0}
+  vrRig: {fileID: 0}
+  locomotionSystem: {fileID: 0}
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []

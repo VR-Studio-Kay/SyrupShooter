@@ -22,24 +22,27 @@ public class EnemyCombat : MonoBehaviour
 
     private void FireProjectile(Transform target)
     {
-        if (projectile == null || spawnPoint == null) return;
+        if (projectile == null || spawnPoint == null || target == null) return;
 
-        GameObject bullet = Instantiate(projectile, spawnPoint.position, Quaternion.identity);
+        Vector3 direction = (target.position + Vector3.up * 0.5f - spawnPoint.position).normalized;
+
+        GameObject bullet = Instantiate(projectile, spawnPoint.position, Quaternion.LookRotation(direction));
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
 
         if (rb != null)
         {
-            Vector3 direction = (target.position - spawnPoint.position).normalized;
-            direction += new Vector3(
-                Random.Range(-0.02f, 0.02f),
-                Random.Range(-0.02f, 0.02f),
-                Random.Range(-0.02f, 0.02f));
+            Vector3 randomizedDir = direction +
+                new Vector3(
+                    Random.Range(-0.02f, 0.02f),
+                    Random.Range(-0.02f, 0.02f),
+                    Random.Range(-0.02f, 0.02f)
+                );
 
-            rb.AddForce(direction * 32f, ForceMode.Impulse);
+            rb.linearVelocity = randomizedDir.normalized * 32f; // Velocity is more consistent than force for aiming
         }
 
         if (attackVFX != null)
-            Instantiate(attackVFX, spawnPoint.position, Quaternion.identity);
+            Instantiate(attackVFX, spawnPoint.position, Quaternion.LookRotation(direction));
 
         if (audioSource != null && attackSFX != null)
             audioSource.PlayOneShot(attackSFX);

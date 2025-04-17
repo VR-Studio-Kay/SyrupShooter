@@ -7958,13 +7958,21 @@ PrefabInstance:
       propertyPath: m_audioClip
       value: 
       objectReference: {fileID: 8300000, guid: cbd06d02f894b8c4e93a78d6463baaa7, type: 3}
+    - target: {fileID: 5889424803603844350, guid: 38c1bcd7a91a6d041b8120186791ca85, type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6519497370907643523, guid: 38c1bcd7a91a6d041b8120186791ca85, type: 3}
       propertyPath: fireDelay
-      value: 5
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6905923832148394875, guid: 38c1bcd7a91a6d041b8120186791ca85, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8588493308291633911, guid: 38c1bcd7a91a6d041b8120186791ca85, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.03901
       objectReference: {fileID: 0}
     - target: {fileID: 9178282818742590021, guid: 38c1bcd7a91a6d041b8120186791ca85, type: 3}
       propertyPath: cam
@@ -8504,6 +8512,18 @@ PrefabInstance:
       propertyPath: m_InteractionManager
       value: 
       objectReference: {fileID: 1569344681}
+    - target: {fileID: 3325106404071629045, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
+      propertyPath: m_Color.a
+      value: 0.27058825
+      objectReference: {fileID: 0}
+    - target: {fileID: 3325106404071629045, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
+      propertyPath: m_RaycastPadding.x
+      value: 9.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 3460819865663315839, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
+      propertyPath: m_DynamicPixelsPerUnit
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 4407561403306539903, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -8547,6 +8567,26 @@ PrefabInstance:
     - target: {fileID: 5328830947113341990, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6424488228153417030, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 1920
+      objectReference: {fileID: 0}
+    - target: {fileID: 6424488228153417030, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 1080
+      objectReference: {fileID: 0}
+    - target: {fileID: 6424488228153417030, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.16072112
+      objectReference: {fileID: 0}
+    - target: {fileID: 6424488228153417030, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.022901153
+      objectReference: {fileID: 0}
+    - target: {fileID: 6424488228153417030, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.16072112
       objectReference: {fileID: 0}
     - target: {fileID: 6942945521184843341, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
       propertyPath: m_LeftHand
