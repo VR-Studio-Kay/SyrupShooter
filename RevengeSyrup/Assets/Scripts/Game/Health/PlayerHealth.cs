@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -25,6 +26,16 @@ public class PlayerHealth : MonoBehaviour
     [Header("Game Over UI")]
     public GameObject gameOverCanvas;
     public Button resetCheckpointButton;
+    [SerializeField] private CanvasGroup fadeCanvasGroup;
+    [SerializeField] private float fadeSpeed = 1f;
+
+    [Header("XR Controller Feedback")]
+    [SerializeField] private XRBaseController leftController;
+    [SerializeField] private XRBaseController rightController;
+
+    [Header("Disable on Death")]
+    [SerializeField] private GameObject vrRig;
+    [SerializeField] private GameObject locomotionSystem;
 
     [Header("Events")]
     public UnityEvent<int> onHealthChanged;
@@ -36,6 +47,7 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = maxHealth;
         audioSource = GetComponent<AudioSource>();
+        audioSource.spatialBlend = 1f;
 
         if (healthBarSlider != null)
             healthBarSlider.value = CalculateHealthPercentage();
@@ -49,10 +61,12 @@ public class PlayerHealth : MonoBehaviour
             bloodScreenCanvasGroup.alpha = 0f;
         }
 
+        if (fadeCanvasGroup != null)
+            fadeCanvasGroup.alpha = 0f;
+
         if (resetCheckpointButton != null)
             resetCheckpointButton.onClick.AddListener(RestartScene);
     }
-
 
     public void TakeDamage(int amount)
     {
@@ -81,7 +95,6 @@ public class PlayerHealth : MonoBehaviour
         currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
 
-        // Optional: Play healing sound or visual feedback here
         Debug.Log($"[PlayerHealth] Healed {amount}. Current HP: {currentHealth}");
 
         if (healthBarSlider != null)
@@ -92,16 +105,25 @@ public class PlayerHealth : MonoBehaviour
 
     private void TriggerFeedback()
     {
+        // Blood screen
         if (bloodScreenPrefab != null)
         {
             bloodScreenCanvasGroup.alpha = 1f;
             StartCoroutine(FadeBloodScreen());
         }
 
+        // Audio
         if (damageSound != null && audioSource != null)
-        {
             audioSource.PlayOneShot(damageSound);
-        }
+
+        // Haptics
+        TriggerHaptics();
+    }
+
+    private void TriggerHaptics(float intensity = 0.5f, float duration = 0.2f)
+    {
+        leftController?.SendHapticImpulse(intensity, duration);
+        rightController?.SendHapticImpulse(intensity, duration);
     }
 
     private IEnumerator FadeBloodScreen()
@@ -137,18 +159,41 @@ public class PlayerHealth : MonoBehaviour
     private void Die()
     {
         Debug.Log("[PlayerHealth] Player has died.");
-
         onDeath?.Invoke();
+
+        // Disable movement/input
+        if (vrRig != null) vrRig.SetActive(false);
+        if (locomotionSystem != null) locomotionSystem.SetActive(false);
+
+        // Fade to black + show game over
+        StartCoroutine(FadeToBlackThenGameOver());
+    }
+
+    private IEnumerator FadeToBlackThenGameOver()
+    {
+        if (fadeCanvasGroup == null)
+        {
+            if (gameOverCanvas != null)
+                gameOverCanvas.SetActive(true);
+            yield break;
+        }
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime * fadeSpeed;
+            fadeCanvasGroup.alpha = t;
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(1f);
 
         if (gameOverCanvas != null)
             gameOverCanvas.SetActive(true);
-
-        // Optional: Disable player controls, interactions, etc.
     }
 
     public void RestartScene()
     {
-        // Get the current active scene and reload it
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
     }
