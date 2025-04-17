@@ -19,7 +19,7 @@ public class intro_jeu : MonoBehaviour
 
     private void OnTriggerEnter(Collider other){
 
-    if(other.tag == "introTrigger"){
+    if(other.CompareTag("introTrigger")){
         WagonAnimator.SetFloat("speed", 1);
         TunnelAnimator.enabled = false;
         introTrigger.SetActive(false);
