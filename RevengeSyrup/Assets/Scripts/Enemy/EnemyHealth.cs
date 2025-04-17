@@ -9,10 +9,12 @@ public class EnemyHealth : MonoBehaviour
 
     private int maxHealth;
     private EnemyVisuals visuals;
+    private RagdollController ragdoll;
 
     private void Start()
     {
         visuals = GetComponent<EnemyVisuals>();
+        ragdoll = GetComponent<RagdollController>();
         maxHealth = health;
         healthBar?.SetMaxHealth(maxHealth);
     }
@@ -36,18 +38,12 @@ public class EnemyHealth : MonoBehaviour
         Collider col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
 
-        Rigidbody rb = GetComponent<Rigidbody>();
-        if (rb == null)
+        if (ragdoll != null)
         {
-            rb = gameObject.AddComponent<Rigidbody>(); // Add Rigidbody if not already there
+            ragdoll.ToggleRagdoll(true);
+            ragdoll.AddForce(-transform.forward + Vector3.up, 3f);
         }
 
-        rb.isKinematic = false;
-        rb.useGravity = true;
-
-        // Optional: Add a backward force to simulate collapsing
-        rb.AddForce(-transform.forward * 2f + Vector3.up * 2f, ForceMode.Impulse);
-
-        Destroy(gameObject, 4f); // Delay destroy so we can see the fall
+        Destroy(gameObject, 5f);
     }
 }
