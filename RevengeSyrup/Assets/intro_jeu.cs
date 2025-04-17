@@ -14,14 +14,14 @@ public class intro_jeu : MonoBehaviour
     void Start()
     {
         WagonAnimator.SetFloat("speed", 0);
-	    TunnelAnimator.Play("tunnel_intro");
+	    TunnelAnimator.GetComponent<Animator>().Play("tunnel_intro");
     }
 
     private void OnTriggerEnter(Collider other){
 
     if(other.CompareTag("introTrigger")){
         WagonAnimator.SetFloat("speed", 1);
-        TunnelAnimator.enabled = false;
+        TunnelAnimator.GetComponent<Animator>().enabled = false;
         introTrigger.SetActive(false);
         porte.SetActive(false);
         start.SetActive(false);
