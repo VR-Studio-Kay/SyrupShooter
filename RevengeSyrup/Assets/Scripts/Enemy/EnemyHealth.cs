@@ -36,6 +36,18 @@ public class EnemyHealth : MonoBehaviour
         Collider col = GetComponent<Collider>();
         if (col != null) col.enabled = false;
 
-        Destroy(gameObject, 2f);
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>(); // Add Rigidbody if not already there
+        }
+
+        rb.isKinematic = false;
+        rb.useGravity = true;
+
+        // Optional: Add a backward force to simulate collapsing
+        rb.AddForce(-transform.forward * 2f + Vector3.up * 2f, ForceMode.Impulse);
+
+        Destroy(gameObject, 4f); // Delay destroy so we can see the fall
     }
 }

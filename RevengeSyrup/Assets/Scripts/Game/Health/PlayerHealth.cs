@@ -22,6 +22,10 @@ public class PlayerHealth : MonoBehaviour
     [Header("Health UI")]
     public Slider healthBarSlider;
 
+    [Header("Game Over UI")]
+    public GameObject gameOverCanvas;
+    public Button resetCheckpointButton;
+
     [Header("Events")]
     public UnityEvent<int> onHealthChanged;
     public UnityEvent onDeath;
@@ -32,8 +36,6 @@ public class PlayerHealth : MonoBehaviour
     {
         currentHealth = maxHealth;
         audioSource = GetComponent<AudioSource>();
-
-        Debug.Log($"[PlayerHealth] Player starts with {currentHealth} HP.");
 
         if (healthBarSlider != null)
             healthBarSlider.value = CalculateHealthPercentage();
@@ -46,7 +48,11 @@ public class PlayerHealth : MonoBehaviour
 
             bloodScreenCanvasGroup.alpha = 0f;
         }
+
+        if (resetCheckpointButton != null)
+            resetCheckpointButton.onClick.AddListener(RestartScene);
     }
+
 
     public void TakeDamage(int amount)
     {
@@ -132,11 +138,12 @@ public class PlayerHealth : MonoBehaviour
     {
         Debug.Log("[PlayerHealth] Player has died.");
 
-        // Trigger the death event
         onDeath?.Invoke();
 
-        // Restart the scene when player dies
-        RestartScene();
+        if (gameOverCanvas != null)
+            gameOverCanvas.SetActive(true);
+
+        // Optional: Disable player controls, interactions, etc.
     }
 
     public void RestartScene()
