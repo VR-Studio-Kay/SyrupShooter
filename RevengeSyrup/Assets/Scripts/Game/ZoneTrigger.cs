@@ -2,13 +2,15 @@ using UnityEngine;
 
 public class ZoneTrigger : MonoBehaviour
 {
-    public ZoneManager zone;
+    [SerializeField] private ZoneManager zoneManager;
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            zone.ActivateZone();
+            Debug.Log($"[ZoneTrigger] Player entered zone: {gameObject.name}");
+            zoneManager?.StartZone();
+            gameObject.SetActive(false);
         }
     }
 }

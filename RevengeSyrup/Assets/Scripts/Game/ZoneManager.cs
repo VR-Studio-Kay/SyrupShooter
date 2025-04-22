@@ -3,37 +3,49 @@ using System.Collections.Generic;
 
 public class ZoneManager : MonoBehaviour
 {
-    public List<GameObject> enemies;
-    public Transform nextZone;
-    public PlayerAutoMover autoMover;
+    [SerializeField] private List<EnemyAIController> enemies;
+    [SerializeField] private PlayerAutoMover scroller;
 
-    private bool isZoneActive = false;
+    public void StartZone()
+    {
+        Debug.Log($"[ZoneManager] Zone started: {gameObject.name}");
+        if (enemies.Count == 0)
+        {
+            Debug.Log("[ZoneManager] No enemies in zone — auto-scrolling now.");
+            scroller?.MoveToNextZone();
+        }
+    }
 
-    void Start()
+    private void Start()
     {
         foreach (var enemy in enemies)
         {
             if (enemy != null)
             {
-                EnemyAIController ai = enemy.GetComponent<EnemyAIController>();
-                if (ai != null)
-                    ai.OnEnemyKilled += CheckEnemiesLeft;
+                enemy.OnEnemyKilled += CheckEnemiesLeft;
+                Debug.Log($"[ZoneManager] Subscribed to enemy: {enemy.name}");
             }
         }
-    }
-    public void ActivateZone()
-    {
-        isZoneActive = true;
-        autoMover.StopMovement();
     }
 
     private void CheckEnemiesLeft()
     {
         enemies.RemoveAll(e => e == null);
+        Debug.Log($"[ZoneManager] Enemy killed. {enemies.Count} remaining.");
 
         if (enemies.Count == 0)
         {
-            autoMover.SetTarget(nextZone);
+            Debug.Log("[ZoneManager] All enemies defeated — triggering auto-scroll.");
+            scroller?.MoveToNextZone();
+        }
+    }
+
+    private void OnDisable()
+    {
+        foreach (var enemy in enemies)
+        {
+            if (enemy != null)
+                enemy.OnEnemyKilled -= CheckEnemiesLeft;
         }
     }
 }

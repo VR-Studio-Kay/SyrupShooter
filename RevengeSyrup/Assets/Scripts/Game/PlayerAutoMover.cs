@@ -2,36 +2,30 @@ using UnityEngine;
 
 public class PlayerAutoMover : MonoBehaviour
 {
-    public float moveSpeed = 2f;
-    private bool isMoving = true;
-    private Transform currentTarget;
+    [SerializeField] private Transform player;
+    [SerializeField] private Vector3 scrollOffset;
+    [SerializeField] private float scrollSpeed = 2f;
 
-    public void SetTarget(Transform target)
+    private bool shouldScroll = false;
+    private Vector3 targetPosition;
+
+    public void MoveToNextZone()
     {
-        currentTarget = target;
-        isMoving = true;
+        targetPosition = player.position + scrollOffset;
+        shouldScroll = true;
+        Debug.Log($"[AutoScroller] Starting auto-scroll to: {targetPosition}");
     }
 
-    public void StopMovement()
+    private void Update()
     {
-        isMoving = false;
-    }
-
-    public void ResumeMovement()
-    {
-        isMoving = true;
-    }
-
-    void Update()
-    {
-        if (isMoving && currentTarget != null)
+        if (shouldScroll)
         {
-            transform.position = Vector3.MoveTowards(transform.position, currentTarget.position, moveSpeed * Time.deltaTime);
+            player.position = Vector3.MoveTowards(player.position, targetPosition, scrollSpeed * Time.deltaTime);
 
-            if (Vector3.Distance(transform.position, currentTarget.position) < 0.1f)
+            if (Vector3.Distance(player.position, targetPosition) < 0.1f)
             {
-                isMoving = false;
-                currentTarget = null;
+                shouldScroll = false;
+                Debug.Log("[AutoScroller] Auto-scroll complete. Player reached target.");
             }
         }
     }
