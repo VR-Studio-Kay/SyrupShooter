@@ -133,6 +133,13 @@ public class Bullet : MonoBehaviour
             StartCoroutine(DestroyAfterSound());
     }
 
+    /*private void OnTriggerExit(Collider other){
+        if(other.CompareTag("introTrigger")){
+             //intro.trigger();
+             intro.GetComponent<intro_jeu>().allo();
+        }
+    }*/
+
     private IEnumerator DestroyAfterSound()
     {
         if (audioSource != null && hitSound != null)
