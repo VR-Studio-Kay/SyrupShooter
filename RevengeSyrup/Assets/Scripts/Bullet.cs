@@ -37,6 +37,7 @@ public class Bullet : MonoBehaviour
     public ParticleSystem impactParticleSystem; // Particle system for impact effect
 
     public GameObject intro;
+    //public intro_jeu intro;
     //Script script = (Script) intro.GetComponent(typeof(Script));
 
     private void Awake()
