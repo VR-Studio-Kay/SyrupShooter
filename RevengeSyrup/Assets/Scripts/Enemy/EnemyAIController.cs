@@ -1,8 +1,11 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System;
 
 public class EnemyAIController : MonoBehaviour
 {
+    public event Action OnEnemyKilled; // <-- Instance event
+
     [Header("Detection")]
     [SerializeField] private float sightRange = 15f;
     [SerializeField] private float fov = 110f;
@@ -46,22 +49,19 @@ public class EnemyAIController : MonoBehaviour
                 gun.OnPlayerDetected();
             }
 
-            // Maintain distance from player
             if (distanceToPlayer > attackRange)
             {
-                // Move toward the player, but stop when close enough
                 Vector3 direction = (transform.position - player.position).normalized;
                 Vector3 targetPosition = player.position + direction * attackRange;
 
-                NavMeshHit hit;
-                if (NavMesh.SamplePosition(targetPosition, out hit, 2f, NavMesh.AllAreas))
+                if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
                 {
                     agent.SetDestination(hit.position);
                 }
             }
             else
             {
-                agent.SetDestination(transform.position); // stop moving
+                agent.SetDestination(transform.position);
             }
 
             FacePlayer();
@@ -112,5 +112,12 @@ public class EnemyAIController : MonoBehaviour
             Quaternion rotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 5f);
         }
+    }
+
+    public void Kill()
+    {
+        // Optional: play animation, VFX, etc.
+        OnEnemyKilled?.Invoke();
+        Destroy(gameObject);
     }
 }
