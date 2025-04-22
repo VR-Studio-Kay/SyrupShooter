@@ -5,6 +5,7 @@ public class intro_jeu : MonoBehaviour
 {
     public Animator WagonAnimator;
     public Animator TunnelAnimator;
+    public Animator PlayerAnimator;
     public GameObject start;
     public GameObject title;
     public GameObject porte;
@@ -16,6 +17,7 @@ public class intro_jeu : MonoBehaviour
     void Start()
     {
         WagonAnimator.SetFloat("speed", 0);
+        PlayerAnimator.SetFloat("speed", 0);
 	    TunnelAnimator.GetComponent<Animator>().Play("tunnel_intro");
     }
 
@@ -34,6 +36,7 @@ public class intro_jeu : MonoBehaviour
 
     public void allo(){
         WagonAnimator.SetFloat("speed", 1);
+        PlayerAnimator.SetFloat("speed", 1);
         TunnelAnimator.GetComponent<Animator>().enabled = false;
         introTrigger.SetActive(false);
         porte.SetActive(false);
