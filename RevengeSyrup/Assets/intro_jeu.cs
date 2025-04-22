@@ -10,7 +10,7 @@ public class intro_jeu : MonoBehaviour
     public GameObject porte;
     public GameObject introTrigger;
     public GameObject candycorn;
-    public Bool trigger;
+    //public Bool trigger;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -32,13 +32,14 @@ public class intro_jeu : MonoBehaviour
 
 }*/
 
-    void trigger(){
+    public void allo(){
         WagonAnimator.SetFloat("speed", 1);
         TunnelAnimator.GetComponent<Animator>().enabled = false;
         introTrigger.SetActive(false);
         porte.SetActive(false);
         start.SetActive(false);
         title.SetActive(true);
+        Debug.Log("yo");
     }
 
     // Update is called once per frame

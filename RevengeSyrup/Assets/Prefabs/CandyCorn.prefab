@@ -171,6 +171,7 @@ MonoBehaviour:
   useObjectPooling: 1
   bulletPoolReturnTarget: {fileID: 7493257951084506997}
   impactParticleSystem: {fileID: 0}
+  intro: {fileID: 1520677475330262963, guid: 584b51cb519be8945b3011ad2f93ea06, type: 3}
 --- !u!96 &3607380763871945840
 TrailRenderer:
   serializedVersion: 3
@@ -396,3 +397,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5c7f642ae349054295b7fb6664c0e52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WagonAnimator: {fileID: 0}
+  TunnelAnimator: {fileID: 0}
+  start: {fileID: 0}
+  title: {fileID: 0}
+  porte: {fileID: 0}
+  introTrigger: {fileID: 0}
+  candycorn: {fileID: 0}

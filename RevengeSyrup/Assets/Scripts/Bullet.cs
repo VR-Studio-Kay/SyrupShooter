@@ -36,6 +36,9 @@ public class Bullet : MonoBehaviour
     // Public ParticleSystem field for Inspector assignment
     public ParticleSystem impactParticleSystem; // Particle system for impact effect
 
+    public GameObject intro;
+    //Script script = (Script) intro.GetComponent(typeof(Script));
+
     private void Awake()
     {
         audioSource = GetComponent<AudioSource>();
@@ -74,6 +77,12 @@ public class Bullet : MonoBehaviour
             return;
 
         hasImpacted = true;
+
+        // Check if collided object is the intro trigger
+        if(other.CompareTag("introTrigger")){
+             //intro.trigger();
+             intro.GetComponent<intro_jeu>().allo();
+        }
 
         // Damage logic
         int finalDamage = baseDamage;
