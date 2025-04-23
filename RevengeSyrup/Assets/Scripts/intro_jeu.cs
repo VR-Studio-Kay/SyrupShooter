@@ -45,18 +45,26 @@ public class intro_jeu : MonoBehaviour
         Debug.Log("yo");
     }
 
-    private void OnTriggerEnter(Collider other){
+    /*private void OnTriggerEnter(Collider other){
 
     if(other.CompareTag("makeXRWork")){
         PlayerAnimator.GetComponent<Animator>().enabled = false;
-        Debug.Log("animator is dead");
+        Debug.Log("animatorisdead");
         }
 
-}
+}*/
+
+    
 
     // Update is called once per frame
     void Update()
     {
+        if( PlayerAnimator.GetCurrentAnimatorStateInfo(1).IsName("perso_intro") ){
+            PlayerAnimator.GetComponent<Animator>().enabled = false;
+            Debug.Log("animatorisdead");
+        }
+
+        //Debug.Log(TunnelAnimator.GetCurrentAnimatorStateInfo(0).length);
         
     }
 }
