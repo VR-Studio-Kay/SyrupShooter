@@ -34,14 +34,6 @@ public class intro_jeu : MonoBehaviour
 
 }*/
 
-    private void OnTriggerExit(Collider other){
-
-        if(other.CompareTag("leavingWagon")){
-            WagonAnimator.GetComponent<Animator>().Play("metro_depart");
-        }
-
-    }
-
     public void allo(){
         WagonAnimator.SetFloat("speed", 1);
         PlayerAnimator.SetFloat("speed", 1);
