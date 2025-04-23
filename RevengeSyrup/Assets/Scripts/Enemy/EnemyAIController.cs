@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using System;
 
+[RequireComponent(typeof(NavMeshAgent))]
 public class EnemyAIController : MonoBehaviour
 {
     public event Action OnEnemyKilled;
@@ -34,16 +35,15 @@ public class EnemyAIController : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
+        if (player == null)
+            Debug.LogWarning("Player not found. Make sure the Player has the 'Player' tag.");
+
         if (patrolScript != null)
         {
-            patrolScript.enabled = true;
-            Debug.Log("Patrol script enabled on start.");
+            patrolScript.EnablePatrol();
         }
 
-        if (player == null)
-        {
-            Debug.LogWarning("Player not found make sure the Player has the 'Player' tag.");
-        }
+        ConfigureAgentForRobot();
     }
 
     private void Update()
@@ -51,7 +51,6 @@ public class EnemyAIController : MonoBehaviour
         if (player == null) return;
 
         cooldown -= Time.deltaTime;
-
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
         if (IsPlayerInSight())
@@ -59,25 +58,19 @@ public class EnemyAIController : MonoBehaviour
             if (!isPlayerVisible)
             {
                 isPlayerVisible = true;
-                Debug.Log("Player detected!");
-
-                if (patrolScript != null)
-                {
-                    patrolScript.enabled = false;
-                    Debug.Log("Patrol disabled due to player detection.");
-                }
-
+                Debug.Log(">> Target Acquired: Engaging.");
+                patrolScript?.DisablePatrol();
                 gun.OnPlayerDetected();
             }
 
             if (distanceToPlayer > attackRange)
             {
-                Debug.Log("Chasing player...");
+                Debug.Log(">> Chasing target.");
                 agent.SetDestination(player.position);
             }
             else
             {
-                Debug.Log("Within attack range. Strafing and facing player...");
+                Debug.Log(">> Target in range. Initiating strafe maneuver.");
                 HandleCombatMovement();
             }
 
@@ -85,7 +78,7 @@ public class EnemyAIController : MonoBehaviour
 
             if (distanceToPlayer <= attackRange && cooldown <= 0f)
             {
-                Debug.Log("Firing at player.");
+                Debug.Log(">> Firing.");
                 gun.Fire();
                 cooldown = attackCooldown;
             }
@@ -95,14 +88,8 @@ public class EnemyAIController : MonoBehaviour
             if (isPlayerVisible)
             {
                 isPlayerVisible = false;
-                Debug.Log("Lost sight of player, returning to patrol.");
-
-                if (patrolScript != null)
-                {
-                    patrolScript.enabled = true;
-                    Debug.Log("Patrol re-enabled.");
-                }
-
+                Debug.Log(">> Target lost. Returning to patrol.");
+                patrolScript?.EnablePatrol();
                 gun.OnPlayerLost();
             }
         }
@@ -117,13 +104,11 @@ public class EnemyAIController : MonoBehaviour
             Vector3 right = transform.right;
             strafeDirection = (UnityEngine.Random.value > 0.5f) ? right : -right;
 
-            // Add slight forward movement to avoid linear strafe patterns
             strafeDirection += transform.forward * 0.2f;
             strafeDirection.Normalize();
 
             strafeTimer = strafeChangeInterval;
-
-            Debug.Log($"New strafe direction chosen: {strafeDirection}");
+            Debug.Log(">> New evasive strafe vector: " + strafeDirection);
         }
 
         Vector3 targetPosition = transform.position + strafeDirection * strafeSpeed;
@@ -146,11 +131,9 @@ public class EnemyAIController : MonoBehaviour
 
             if (Physics.Raycast(origin, destination - origin, out RaycastHit hit, sightRange, ~obstructionMask))
             {
-               
+                Debug.DrawRay(origin, destination - origin, Color.red);
                 bool hitPlayer = hit.collider.CompareTag("Player");
-
-                Debug.Log($"Raycast hit: {hit.collider.name}, Is player: {hitPlayer}");
-
+                Debug.Log($">> Raycast hit: {hit.collider.name}, Is player: {hitPlayer}");
                 return hitPlayer;
             }
         }
@@ -166,13 +149,21 @@ public class EnemyAIController : MonoBehaviour
         if (direction != Vector3.zero)
         {
             Quaternion rotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 5f);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, 300f * Time.deltaTime);
         }
+    }
+
+    private void ConfigureAgentForRobot()
+    {
+        agent.angularSpeed = 720f;
+        agent.acceleration = 100f;
+        agent.speed = 3.5f;
+        Debug.Log(">> NavMeshAgent configured for robotic behavior.");
     }
 
     public void Kill()
     {
-        Debug.Log("Enemy killed.");
+        Debug.Log(">> Unit shutdown.");
         OnEnemyKilled?.Invoke();
         Destroy(gameObject);
     }

@@ -4,102 +4,70 @@ using UnityEngine.AI;
 public class EnemyPatrol : MonoBehaviour
 {
     [SerializeField] private Transform[] patrolPoints;
-    [SerializeField] private float waitTimeAtPoint = 1.5f;
-    [SerializeField] private bool randomPatrol = false;
-    [SerializeField] private bool loopPatrol = true;
+    [SerializeField] private float pauseDuration = 1f;
+    [SerializeField] private float rotationSpeed = 360f;
 
-    private int currentPointIndex = 0;
-    private float waitTimer = 0f;
     private NavMeshAgent agent;
-    private bool waiting = false;
+    private int currentPointIndex = 0;
+    private bool isPaused = false;
+    private float pauseTimer = 0f;
 
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-
-        if (patrolPoints.Length > 0 && patrolPoints[currentPointIndex] != null)
+        if (patrolPoints.Length > 0)
+        {
             agent.SetDestination(patrolPoints[currentPointIndex].position);
+        }
     }
 
     private void Update()
     {
-        if (patrolPoints.Length == 0 || agent.pathPending) return;
-
-        if (agent.remainingDistance <= agent.stoppingDistance)
-        {
-            if (!waiting)
-            {
-                waiting = true;
-                waitTimer = waitTimeAtPoint;
-            }
-
-            waitTimer -= Time.deltaTime;
-
-            if (waitTimer <= 0f)
-            {
-                GoToNextPoint();
-                waiting = false;
-            }
-        }
-
-        FaceMovementDirection();
+        if (isPaused) HandlePause();
+        else HandlePatrol();
     }
 
-    private void GoToNextPoint()
+    private void HandlePatrol()
     {
-        if (patrolPoints.Length == 0) return;
-
-        if (randomPatrol)
+        if (!agent.pathPending && agent.remainingDistance < 0.2f)
         {
-            int newIndex;
-            do
-            {
-                newIndex = Random.Range(0, patrolPoints.Length);
-            } while (newIndex == currentPointIndex && patrolPoints.Length > 1);
-
-            currentPointIndex = newIndex;
+            Debug.Log("Reached patrol point. Pausing to scan...");
+            isPaused = true;
+            pauseTimer = pauseDuration;
+            agent.isStopped = true;
         }
-        else
+    }
+
+    private void HandlePause()
+    {
+        pauseTimer -= Time.deltaTime;
+
+        // Simulate robotic scanning (optional)
+        transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+
+        if (pauseTimer <= 0f)
         {
-            currentPointIndex++;
-            if (currentPointIndex >= patrolPoints.Length)
-            {
-                if (loopPatrol)
-                    currentPointIndex = 0;
-                else
-                    return; // Stop patrolling if not looping
-            }
-        }
-
-        if (patrolPoints[currentPointIndex] != null)
+            isPaused = false;
+            agent.isStopped = false;
+            currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
             agent.SetDestination(patrolPoints[currentPointIndex].position);
-    }
 
-    private void FaceMovementDirection()
-    {
-        if (agent.velocity.sqrMagnitude > 0.1f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(agent.velocity.normalized);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+            Debug.Log("Resuming patrol to next point.");
         }
     }
 
-    private void OnDrawGizmosSelected()
+    public void EnablePatrol()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0) return;
+        enabled = true;
+        if (!agent.hasPath && patrolPoints.Length > 0)
+            agent.SetDestination(patrolPoints[currentPointIndex].position);
+        Debug.Log("Robot patrol enabled.");
+    }
 
-        Gizmos.color = Color.cyan;
-        for (int i = 0; i < patrolPoints.Length; i++)
-        {
-            if (patrolPoints[i] != null)
-            {
-                Gizmos.DrawSphere(patrolPoints[i].position, 0.3f);
-
-                if (i + 1 < patrolPoints.Length && patrolPoints[i + 1] != null)
-                    Gizmos.DrawLine(patrolPoints[i].position, patrolPoints[i + 1].position);
-                else if (loopPatrol && patrolPoints[0] != null)
-                    Gizmos.DrawLine(patrolPoints[i].position, patrolPoints[0].position);
-            }
-        }
+    public void DisablePatrol()
+    {
+        enabled = false;
+        if (agent != null) agent.ResetPath();
+        Debug.Log("Robot patrol disabled.");
     }
 }
