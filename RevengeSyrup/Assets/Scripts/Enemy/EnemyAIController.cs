@@ -4,7 +4,7 @@ using System;
 
 public class EnemyAIController : MonoBehaviour
 {
-    public event Action OnEnemyKilled; // <-- Instance event
+    public event Action OnEnemyKilled;
 
     [Header("Detection")]
     [SerializeField] private float sightRange = 15f;
@@ -14,6 +14,8 @@ public class EnemyAIController : MonoBehaviour
     [Header("Combat")]
     [SerializeField] private float attackRange = 10f;
     [SerializeField] private float attackCooldown = 2f;
+    [SerializeField] private float strafeSpeed = 3f; // NEW
+    [SerializeField] private float strafeChangeInterval = 2f; // NEW
 
     [Header("References")]
     [SerializeField] private EnemyPatrol patrolScript;
@@ -23,6 +25,9 @@ public class EnemyAIController : MonoBehaviour
     private Transform player;
     private bool isPlayerVisible = false;
     private float cooldown = 0f;
+
+    private float strafeTimer = 0f; // NEW
+    private Vector3 strafeDirection = Vector3.zero; // NEW
 
     private void Start()
     {
@@ -51,17 +56,11 @@ public class EnemyAIController : MonoBehaviour
 
             if (distanceToPlayer > attackRange)
             {
-                Vector3 direction = (transform.position - player.position).normalized;
-                Vector3 targetPosition = player.position + direction * attackRange;
-
-                if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
-                {
-                    agent.SetDestination(hit.position);
-                }
+                agent.SetDestination(player.position);
             }
             else
             {
-                agent.SetDestination(transform.position);
+                HandleCombatMovement(); // NEW: Strafe instead of standing still
             }
 
             FacePlayer();
@@ -80,6 +79,29 @@ public class EnemyAIController : MonoBehaviour
                 if (patrolScript != null) patrolScript.enabled = true;
                 gun.OnPlayerLost();
             }
+        }
+    }
+
+    private void HandleCombatMovement() // NEW
+    {
+        strafeTimer -= Time.deltaTime;
+        if (strafeTimer <= 0f)
+        {
+            // Choose new strafe direction: left or right
+            Vector3 right = transform.right;
+            strafeDirection = (UnityEngine.Random.value > 0.5f) ? right : -right;
+
+            // Add a little forward motion too
+            strafeDirection += transform.forward * 0.2f;
+            strafeDirection.Normalize();
+
+            strafeTimer = strafeChangeInterval;
+        }
+
+        Vector3 targetPosition = transform.position + strafeDirection * strafeSpeed;
+        if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
         }
     }
 
@@ -116,7 +138,6 @@ public class EnemyAIController : MonoBehaviour
 
     public void Kill()
     {
-        // Optional: play animation, VFX, etc.
         OnEnemyKilled?.Invoke();
         Destroy(gameObject);
     }
