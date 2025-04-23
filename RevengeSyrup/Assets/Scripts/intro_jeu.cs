@@ -38,12 +38,21 @@ public class intro_jeu : MonoBehaviour
         WagonAnimator.SetFloat("speed", 1);
         PlayerAnimator.SetFloat("speed", 1);
         TunnelAnimator.GetComponent<Animator>().enabled = false;
-        introTrigger.SetActive(false);
-        porte.SetActive(false);
+        //introTrigger.SetActive(false);
+        //porte.SetActive(false);
         start.SetActive(false);
         title.SetActive(true);
         Debug.Log("yo");
     }
+
+    private void OnTriggerEnter(Collider other){
+
+    if(other.CompareTag("makeXRWork")){
+        PlayerAnimator.GetComponent<Animator>().enabled = false;
+        Debug.Log("animator is dead");
+        }
+
+}
 
     // Update is called once per frame
     void Update()
