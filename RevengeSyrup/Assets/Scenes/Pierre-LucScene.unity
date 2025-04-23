@@ -15713,6 +15713,10 @@ PrefabInstance:
       propertyPath: outOfAmmoCanvas
       value: 
       objectReference: {fileID: 2011251570447371414}
+    - target: {fileID: 1818440629745956254, guid: a79c0e5ec159b1843a9206bf5fa25bd3, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 40ea87bfb6dc64349a6b3363f1955b6a, type: 3}
     - target: {fileID: 6603250097264506350, guid: a79c0e5ec159b1843a9206bf5fa25bd3, type: 3}
       propertyPath: m_InteractionManager
       value: 

@@ -10,6 +10,9 @@ public class EnemyHealth : MonoBehaviour
     private int maxHealth;
     private EnemyVisuals visuals;
     private RagdollController ragdoll;
+    private Collider[] colliders;
+
+    private bool isDead = false;
 
     private void Start()
     {
@@ -17,10 +20,15 @@ public class EnemyHealth : MonoBehaviour
         ragdoll = GetComponent<RagdollController>();
         maxHealth = health;
         healthBar?.SetMaxHealth(maxHealth);
+
+        // Cache all colliders for disabling on death
+        colliders = GetComponentsInChildren<Collider>();
     }
 
     public void TakeDamage(int damage)
     {
+        if (isDead) return;
+
         health -= damage;
         visuals.ChangeColor(Color.yellow);
         healthBar?.SetHealth(health);
@@ -33,17 +41,29 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
-        GetComponent<NavMeshAgent>().enabled = false;
+        if (isDead) return;
+        isDead = true;
 
-        Collider col = GetComponent<Collider>();
-        if (col != null) col.enabled = false;
+        Debug.Log($"{gameObject.name} died.");
 
+        // Disable AI movement
+        NavMeshAgent agent = GetComponent<NavMeshAgent>();
+        if (agent != null) agent.enabled = false;
+
+        // Disable all colliders
+        foreach (var col in colliders)
+        {
+            col.enabled = false;
+        }
+
+        // Activate ragdoll
         if (ragdoll != null)
         {
             ragdoll.ToggleRagdoll(true);
             ragdoll.AddForce(-transform.forward + Vector3.up, 3f);
         }
 
-        Destroy(gameObject, 5f);
+      
+        Destroy(gameObject, 3f);
     }
 }
