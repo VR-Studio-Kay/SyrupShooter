@@ -59,12 +59,13 @@ public class intro_jeu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if( PlayerAnimator.GetCurrentAnimatorStateInfo(1).IsName("perso_intro") ){
+        if( PlayerAnimator.GetCurrentAnimatorStateInfo(0).length == PlayerAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime ){
             PlayerAnimator.GetComponent<Animator>().enabled = false;
             Debug.Log("animatorisdead");
         }
 
-        //Debug.Log(TunnelAnimator.GetCurrentAnimatorStateInfo(0).length);
+        Debug.Log(PlayerAnimator.GetCurrentAnimatorStateInfo(0).length);
+        Debug.Log(PlayerAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime);
         
     }
 }
