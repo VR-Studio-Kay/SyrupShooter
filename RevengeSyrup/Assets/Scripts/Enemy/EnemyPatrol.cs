@@ -4,70 +4,78 @@ using UnityEngine.AI;
 public class EnemyPatrol : MonoBehaviour
 {
     [SerializeField] private Transform[] patrolPoints;
-    [SerializeField] private float pauseDuration = 1f;
-    [SerializeField] private float rotationSpeed = 360f;
+    [SerializeField] private float pointReachThreshold = 1f;
+    [SerializeField] private float waitTimeAtPoint = 2f;
 
     private NavMeshAgent agent;
-    private int currentPointIndex = 0;
-    private bool isPaused = false;
-    private float pauseTimer = 0f;
+    private int currentPatrolIndex = 0;
+    private float waitTimer = 0f;
+    private bool waiting = false;
 
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        if (patrolPoints.Length > 0)
+
+        if (patrolPoints.Length == 0)
         {
-            agent.SetDestination(patrolPoints[currentPointIndex].position);
+            Debug.LogWarning("No patrol points assigned to EnemyPatrol.");
+            enabled = false;
+            return;
         }
+
+        MoveToNextPoint();
     }
 
     private void Update()
     {
-        if (isPaused) HandlePause();
-        else HandlePatrol();
-    }
+        if (agent.pathPending || patrolPoints.Length == 0)
+            return;
 
-    private void HandlePatrol()
-    {
-        if (!agent.pathPending && agent.remainingDistance < 0.2f)
+        if (!waiting && agent.remainingDistance <= pointReachThreshold)
         {
-            Debug.Log("Reached patrol point. Pausing to scan...");
-            isPaused = true;
-            pauseTimer = pauseDuration;
+            waiting = true;
+            waitTimer = waitTimeAtPoint;
             agent.isStopped = true;
         }
-    }
 
-    private void HandlePause()
-    {
-        pauseTimer -= Time.deltaTime;
-
-        // Simulate robotic scanning (optional)
-        transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
-
-        if (pauseTimer <= 0f)
+        if (waiting)
         {
-            isPaused = false;
-            agent.isStopped = false;
-            currentPointIndex = (currentPointIndex + 1) % patrolPoints.Length;
-            agent.SetDestination(patrolPoints[currentPointIndex].position);
-
-            Debug.Log("Resuming patrol to next point.");
+            waitTimer -= Time.deltaTime;
+            if (waitTimer <= 0f)
+            {
+                waiting = false;
+                MoveToNextPoint();
+            }
         }
     }
 
-    public void EnablePatrol()
+    private void MoveToNextPoint()
     {
-        enabled = true;
-        if (!agent.hasPath && patrolPoints.Length > 0)
-            agent.SetDestination(patrolPoints[currentPointIndex].position);
-        Debug.Log("Robot patrol enabled.");
+        if (patrolPoints.Length == 0)
+            return;
+
+        agent.isStopped = false;
+        agent.SetDestination(patrolPoints[currentPatrolIndex].position);
+        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+
+        Debug.Log($"Moving to patrol point: {currentPatrolIndex}");
     }
 
-    public void DisablePatrol()
+    private void OnEnable()
     {
-        enabled = false;
-        if (agent != null) agent.ResetPath();
-        Debug.Log("Robot patrol disabled.");
+        if (agent == null)
+            agent = GetComponent<NavMeshAgent>();
+
+        agent.isStopped = false;
+        MoveToNextPoint();
+    }
+
+    private void OnDisable()
+    {
+        if (agent != null)
+        {
+            agent.ResetPath();
+            agent.isStopped = true;
+        }
     }
 }

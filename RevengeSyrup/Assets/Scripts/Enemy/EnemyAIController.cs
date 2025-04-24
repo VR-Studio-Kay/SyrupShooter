@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.AI;
 using System;
 
-[RequireComponent(typeof(NavMeshAgent))]
 public class EnemyAIController : MonoBehaviour
 {
     public event Action OnEnemyKilled;
@@ -61,9 +60,10 @@ public class EnemyAIController : MonoBehaviour
                 isPlayerVisible = true;
                 Debug.Log("Player detected!");
 
-                if (patrolScript != null)
+                if (patrolScript != null && patrolScript.enabled)
                 {
                     patrolScript.enabled = false;
+                    agent.ResetPath(); // Stop current patrol movement
                     Debug.Log("Patrol disabled due to player detection.");
                 }
 
@@ -72,27 +72,22 @@ public class EnemyAIController : MonoBehaviour
 
             if (distanceToPlayer > attackRange)
             {
-                // Chase the player
-                agent.updateRotation = true;
-                agent.ResetPath();
-                agent.SetDestination(player.position);
                 Debug.Log("Chasing player...");
+                agent.SetDestination(player.position);
             }
             else
             {
-                // Strafe around the player
-                agent.updateRotation = false;
+                Debug.Log("Within attack range. Strafing and facing player...");
                 HandleCombatMovement();
-                Debug.Log("Strafing around player.");
             }
 
             FacePlayer();
 
             if (distanceToPlayer <= attackRange && cooldown <= 0f)
             {
+                Debug.Log("Firing at player.");
                 gun.Fire();
                 cooldown = attackCooldown;
-                Debug.Log("Firing at player.");
             }
         }
         else
@@ -122,17 +117,17 @@ public class EnemyAIController : MonoBehaviour
             Vector3 right = transform.right;
             strafeDirection = (UnityEngine.Random.value > 0.5f) ? right : -right;
 
-            // Slight forward motion
             strafeDirection += transform.forward * 0.2f;
             strafeDirection.Normalize();
 
             strafeTimer = strafeChangeInterval;
 
-            Debug.Log($"New strafe direction: {strafeDirection}");
+            Debug.Log($"New strafe direction chosen: {strafeDirection}");
         }
 
-        Vector3 targetPos = transform.position + strafeDirection * strafeSpeed;
-        if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+        Vector3 targetPosition = transform.position + strafeDirection * strafeSpeed;
+
+        if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 1f, NavMesh.AllAreas))
         {
             agent.SetDestination(hit.position);
         }
@@ -147,11 +142,11 @@ public class EnemyAIController : MonoBehaviour
         {
             Vector3 origin = transform.position + Vector3.up;
             Vector3 destination = player.position + Vector3.up;
+            Vector3 direction = destination - origin;
 
-            if (Physics.Raycast(origin, destination - origin, out RaycastHit hit, sightRange, ~obstructionMask))
+            if (Physics.Raycast(origin, direction, out RaycastHit hit, sightRange, ~obstructionMask))
             {
-                Debug.DrawRay(origin, destination - origin, Color.red);
-
+                Debug.DrawRay(origin, direction, Color.red);
                 bool hitPlayer = hit.collider.CompareTag("Player");
                 Debug.Log($"Raycast hit: {hit.collider.name}, Is player: {hitPlayer}");
 
