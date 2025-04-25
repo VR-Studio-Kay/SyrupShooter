@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
+  companyName: Syrup Games
   productName: RevengeSyrup
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -143,8 +143,8 @@ PlayerSettings:
   bundleVersion: 0.1.0
   preloadedAssets:
   - {fileID: 11400000, guid: 4b46e16ef6140564c9c7a0a441fff1ad, type: 2}
-  - {fileID: 11400000, guid: 99f9c9493070a9d4c979a8fec7c5a8d3, type: 2}
   - {fileID: -944628639613478452, guid: 8c6188a5c4aa33249bc7c1aac5dc96ee, type: 3}
+  - {fileID: 11400000, guid: 99f9c9493070a9d4c979a8fec7c5a8d3, type: 2}
   - {fileID: 2954579814029697522, guid: c569f5083b35cef49a0a170c1e6ce78f, type: 2}
   - {fileID: -1093728161864521285, guid: 52cb794d60ba1234b927365c3c7c4567, type: 2}
   metroInputSource: 0
@@ -291,7 +291,14 @@ PlayerSettings:
   AndroidAppBundleSizeToValidate: 150
   AndroidReportGooglePlayAppDependencies: 1
   androidSymbolsSizeThreshold: 800
-  m_BuildTargetIcons: []
+  m_BuildTargetIcons:
+  - m_BuildTarget: 
+    m_Icons:
+    - serializedVersion: 2
+      m_Icon: {fileID: 2800000, guid: 08548d5ac6b7bc64da0b332636c5cc91, type: 3}
+      m_Width: 128
+      m_Height: 128
+      m_Kind: 0
   m_BuildTargetPlatformIcons:
   - m_BuildTarget: iPhone
     m_Icons:
@@ -525,7 +532,7 @@ PlayerSettings:
     m_APIs: 10000000
     m_Automatic: 0
   - m_BuildTarget: WindowsStandaloneSupport
-    m_APIs: 1200000002000000
+    m_APIs: 02000000
     m_Automatic: 0
   - m_BuildTarget: iOSSupport
     m_APIs: 10000000

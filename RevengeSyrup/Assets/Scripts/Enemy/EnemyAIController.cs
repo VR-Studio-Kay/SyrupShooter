@@ -13,13 +13,14 @@ public class EnemyAIController : MonoBehaviour
 
     [Header("Combat")]
     [SerializeField] private float attackRange = 10f;
-    [SerializeField] private float attackCooldown = 2f;
+    [SerializeField] private float stopDistance = 7f;
+    [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private float strafeSpeed = 3f;
     [SerializeField] private float strafeChangeInterval = 2f;
 
     [Header("References")]
     [SerializeField] private EnemyPatrol patrolScript;
-    [SerializeField] private GunController gun;
+    [SerializeField] private EnemyCombat combat;
 
     private NavMeshAgent agent;
     private Transform player;
@@ -37,12 +38,11 @@ public class EnemyAIController : MonoBehaviour
         if (patrolScript != null)
         {
             patrolScript.enabled = true;
-            Debug.Log("Patrol script enabled on start.");
         }
 
         if (player == null)
         {
-            Debug.LogWarning("Player not found. Make sure the Player has the 'Player' tag.");
+            Debug.LogWarning("Player not found. Ensure the player is tagged correctly.");
         }
     }
 
@@ -58,26 +58,17 @@ public class EnemyAIController : MonoBehaviour
             if (!isPlayerVisible)
             {
                 isPlayerVisible = true;
-                Debug.Log("Player detected!");
-
-                if (patrolScript != null && patrolScript.enabled)
-                {
-                    patrolScript.enabled = false;
-                    agent.ResetPath(); // Stop current patrol movement
-                    Debug.Log("Patrol disabled due to player detection.");
-                }
-
-                gun.OnPlayerDetected();
+                if (patrolScript != null) patrolScript.enabled = false;
             }
 
-            if (distanceToPlayer > attackRange)
+            if (distanceToPlayer > stopDistance)
             {
-                Debug.Log("Chasing player...");
+                agent.isStopped = false;
                 agent.SetDestination(player.position);
             }
             else
             {
-                Debug.Log("Within attack range. Strafing and facing player...");
+                agent.isStopped = false;
                 HandleCombatMovement();
             }
 
@@ -85,8 +76,7 @@ public class EnemyAIController : MonoBehaviour
 
             if (distanceToPlayer <= attackRange && cooldown <= 0f)
             {
-                Debug.Log("Firing at player.");
-                gun.Fire();
+                combat.Attack(player);
                 cooldown = attackCooldown;
             }
         }
@@ -95,15 +85,7 @@ public class EnemyAIController : MonoBehaviour
             if (isPlayerVisible)
             {
                 isPlayerVisible = false;
-                Debug.Log("Lost sight of player. Returning to patrol.");
-
-                if (patrolScript != null)
-                {
-                    patrolScript.enabled = true;
-                    Debug.Log("Patrol re-enabled.");
-                }
-
-                gun.OnPlayerLost();
+                if (patrolScript != null) patrolScript.enabled = true;
             }
         }
     }
@@ -111,22 +93,16 @@ public class EnemyAIController : MonoBehaviour
     private void HandleCombatMovement()
     {
         strafeTimer -= Time.deltaTime;
-
         if (strafeTimer <= 0f)
         {
             Vector3 right = transform.right;
             strafeDirection = (UnityEngine.Random.value > 0.5f) ? right : -right;
-
             strafeDirection += transform.forward * 0.2f;
             strafeDirection.Normalize();
-
             strafeTimer = strafeChangeInterval;
-
-            Debug.Log($"New strafe direction chosen: {strafeDirection}");
         }
 
         Vector3 targetPosition = transform.position + strafeDirection * strafeSpeed;
-
         if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 1f, NavMesh.AllAreas))
         {
             agent.SetDestination(hit.position);
@@ -142,15 +118,11 @@ public class EnemyAIController : MonoBehaviour
         {
             Vector3 origin = transform.position + Vector3.up;
             Vector3 destination = player.position + Vector3.up;
-            Vector3 direction = destination - origin;
 
-            if (Physics.Raycast(origin, direction, out RaycastHit hit, sightRange, ~obstructionMask))
+            if (Physics.Raycast(origin, destination - origin, out RaycastHit hit, sightRange, ~obstructionMask))
             {
-                Debug.DrawRay(origin, direction, Color.red);
-                bool hitPlayer = hit.collider.CompareTag("Player");
-                Debug.Log($"Raycast hit: {hit.collider.name}, Is player: {hitPlayer}");
-
-                return hitPlayer;
+                Debug.DrawRay(origin, destination - origin, Color.red);
+                return hit.collider.CompareTag("Player");
             }
         }
 

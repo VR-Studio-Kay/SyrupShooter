@@ -4,78 +4,39 @@ using UnityEngine.AI;
 public class EnemyPatrol : MonoBehaviour
 {
     [SerializeField] private Transform[] patrolPoints;
-    [SerializeField] private float pointReachThreshold = 1f;
-    [SerializeField] private float waitTimeAtPoint = 2f;
-
+    private int currentIndex = 0;
     private NavMeshAgent agent;
-    private int currentPatrolIndex = 0;
-    private float waitTimer = 0f;
-    private bool waiting = false;
+    private bool isPatrolling = true;
 
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-
-        if (patrolPoints.Length == 0)
+        if (patrolPoints.Length > 0)
         {
-            Debug.LogWarning("No patrol points assigned to EnemyPatrol.");
-            enabled = false;
-            return;
+            agent.SetDestination(patrolPoints[currentIndex].position);
         }
-
-        MoveToNextPoint();
     }
 
     private void Update()
     {
-        if (agent.pathPending || patrolPoints.Length == 0)
-            return;
+        if (!isPatrolling || patrolPoints.Length == 0 || agent.pathPending) return;
 
-        if (!waiting && agent.remainingDistance <= pointReachThreshold)
+        if (agent.remainingDistance <= agent.stoppingDistance)
         {
-            waiting = true;
-            waitTimer = waitTimeAtPoint;
-            agent.isStopped = true;
-        }
-
-        if (waiting)
-        {
-            waitTimer -= Time.deltaTime;
-            if (waitTimer <= 0f)
-            {
-                waiting = false;
-                MoveToNextPoint();
-            }
+            currentIndex = (currentIndex + 1) % patrolPoints.Length;
+            agent.SetDestination(patrolPoints[currentIndex].position);
         }
     }
 
-    private void MoveToNextPoint()
+    public void StopPatrol()
     {
-        if (patrolPoints.Length == 0)
-            return;
-
-        agent.isStopped = false;
-        agent.SetDestination(patrolPoints[currentPatrolIndex].position);
-        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
-
-        Debug.Log($"Moving to patrol point: {currentPatrolIndex}");
+        enabled = false;
+        GetComponent<NavMeshAgent>().ResetPath();
     }
 
-    private void OnEnable()
+    public void ResumePatrol()
     {
-        if (agent == null)
-            agent = GetComponent<NavMeshAgent>();
-
-        agent.isStopped = false;
-        MoveToNextPoint();
+        enabled = true;
     }
 
-    private void OnDisable()
-    {
-        if (agent != null)
-        {
-            agent.ResetPath();
-            agent.isStopped = true;
-        }
-    }
 }

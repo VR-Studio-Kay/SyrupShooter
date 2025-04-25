@@ -38,7 +38,13 @@ public class EnemyCombat : MonoBehaviour
                     Random.Range(-0.02f, 0.02f)
                 );
 
-            rb.linearVelocity = randomizedDir.normalized * 32f; // Velocity is more consistent than force for aiming
+            Vector3 finalDir = randomizedDir.normalized;
+
+            rb.linearVelocity = finalDir * 32f;
+
+            // Optional fallback
+            if (rb.linearVelocity.magnitude < 0.1f)
+                rb.AddForce(finalDir * 1000f);
         }
 
         if (attackVFX != null)
