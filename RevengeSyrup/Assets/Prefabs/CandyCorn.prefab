@@ -68,6 +68,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CandyCorn
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 02bde6ff21827ef4bbda08d82a6a8875, type: 3}
+      propertyPath: m_TagString
+      value: Bullet
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -399,6 +403,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WagonAnimator: {fileID: 0}
   TunnelAnimator: {fileID: 0}
+  PlayerAnimator: {fileID: 0}
   start: {fileID: 0}
   title: {fileID: 0}
   porte: {fileID: 0}

@@ -11,6 +11,7 @@ TagManager:
   - Origin
   - introTrigger
   - CriticalHitZone
+  - Bullet
   layers:
   - Default
   - TransparentFX

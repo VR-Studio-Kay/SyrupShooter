@@ -63,7 +63,7 @@ public class EnemyHealth : MonoBehaviour
             ragdoll.AddForce(-transform.forward + Vector3.up, 3f);
         }
 
-      
+        // Destroy enemy after ragdoll effect (add some delay for better visual effect)
         Destroy(gameObject, 3f);
     }
 }

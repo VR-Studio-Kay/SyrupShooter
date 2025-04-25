@@ -31,6 +31,7 @@ public class EnemyCombat : MonoBehaviour
 
         if (rb != null)
         {
+            // Adding randomness to the projectile direction for a more realistic effect
             Vector3 randomizedDir = direction +
                 new Vector3(
                     Random.Range(-0.02f, 0.02f),
@@ -40,10 +41,10 @@ public class EnemyCombat : MonoBehaviour
 
             Vector3 finalDir = randomizedDir.normalized;
 
-            rb.linearVelocity = finalDir * 32f;
+            rb.velocity = finalDir * 32f;  // Using velocity instead of linearVelocity for better control
 
-            // Optional fallback
-            if (rb.linearVelocity.magnitude < 0.1f)
+            // Optional fallback if velocity is too low
+            if (rb.velocity.magnitude < 0.1f)
                 rb.AddForce(finalDir * 1000f);
         }
 
@@ -56,5 +57,8 @@ public class EnemyCombat : MonoBehaviour
         Destroy(bullet, 5f);
     }
 
-    private void ResetAttack() => alreadyAttacked = false;
+    private void ResetAttack()
+    {
+        alreadyAttacked = false;
+    }
 }

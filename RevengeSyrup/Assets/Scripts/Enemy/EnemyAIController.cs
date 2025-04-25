@@ -1,150 +1,159 @@
 using UnityEngine;
 using UnityEngine.AI;
-using System;
+using UnityEngine.XR;
+using UnityEngine.XR.Interaction.Toolkit;
+using System.Collections.Generic;
 
 public class EnemyAIController : MonoBehaviour
 {
-    public event Action OnEnemyKilled;
-
-    [Header("Detection")]
-    [SerializeField] private float sightRange = 15f;
-    [SerializeField] private float fov = 110f;
-    [SerializeField] private LayerMask obstructionMask;
-
-    [Header("Combat")]
-    [SerializeField] private float attackRange = 10f;
-    [SerializeField] private float stopDistance = 7f;
-    [SerializeField] private float attackCooldown = 1f;
-    [SerializeField] private float strafeSpeed = 3f;
-    [SerializeField] private float strafeChangeInterval = 2f;
-
     [Header("References")]
     [SerializeField] private EnemyPatrol patrolScript;
-    [SerializeField] private EnemyCombat combat;
+    [SerializeField] private EnemyCombat combatScript;
+    [SerializeField] private Transform player;
+    [SerializeField] private Transform vrCamera; // VR camera reference
+
+    [Header("Settings")]
+    [SerializeField] private float detectionRange = 20f;
+    [SerializeField] private float attackRange = 10f;
+    [SerializeField] private float strafeSpeed = 3f;
+    [SerializeField] private float strafeChangeInterval = 2f;
+    [SerializeField] private float keepDistance = 8f;
+    [SerializeField] private float rotationSpeed = 5f; // Adjusted for VR, smoother rotation
 
     private NavMeshAgent agent;
-    private Transform player;
-    private bool isPlayerVisible = false;
-    private float cooldown = 0f;
+    private bool isPlayerDetected;
+    private float strafeTimer;
+    private Vector3 strafeDirection;
+    private bool isAttacking;
 
-    private float strafeTimer = 0f;
-    private Vector3 strafeDirection = Vector3.zero;
+    private List<InputDevice> devices = new List<InputDevice>(); // To handle VR haptics
 
-    private void Start()
+    public event System.Action OnEnemyKilled;
+
+    void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        player = GameObject.FindGameObjectWithTag("Player")?.transform;
-
-        if (patrolScript != null)
-        {
-            patrolScript.enabled = true;
-        }
-
         if (player == null)
-        {
-            Debug.LogWarning("Player not found. Ensure the player is tagged correctly.");
-        }
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
+
+        if (vrCamera == null)
+            vrCamera = Camera.main?.transform; // Default to main camera if no VR camera specified
+
+        InputDevices.GetDevicesWithCharacteristics(InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller, devices);
     }
 
-    private void Update()
+    void Update()
     {
-        if (player == null) return;
+        if (player == null || vrCamera == null) return;
 
-        cooldown -= Time.deltaTime;
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
-        if (IsPlayerInSight())
+        if (distanceToPlayer <= detectionRange && HasLineOfSight())
         {
-            if (!isPlayerVisible)
+            if (!isPlayerDetected)
             {
-                isPlayerVisible = true;
-                if (patrolScript != null) patrolScript.enabled = false;
+                isPlayerDetected = true;
+                if (patrolScript != null)
+                {
+                    patrolScript.StopPatrol();
+                    Debug.Log("Patrol stopped - Player detected");
+                }
             }
 
-            if (distanceToPlayer > stopDistance)
+            if (distanceToPlayer > keepDistance)
             {
+                // Chasing the player
+                isAttacking = false;
                 agent.isStopped = false;
                 agent.SetDestination(player.position);
+
+                // Continuously face the player while chasing
+                FacePlayer();
             }
             else
             {
-                agent.isStopped = false;
-                HandleCombatMovement();
+                // Strafe when within attack range
+                HandleStrafeMovement();
             }
 
-            FacePlayer();
-
-            if (distanceToPlayer <= attackRange && cooldown <= 0f)
+            if (distanceToPlayer <= attackRange)
             {
-                combat.Attack(player);
-                cooldown = attackCooldown;
+                isAttacking = true;
+                combatScript.Attack(player);
+
+                // VR Haptic feedback when attacking
+                SendHaptics(0.7f, 0.3f);
             }
         }
         else
         {
-            if (isPlayerVisible)
+            if (isPlayerDetected)
             {
-                isPlayerVisible = false;
-                if (patrolScript != null) patrolScript.enabled = true;
+                isPlayerDetected = false;
+                if (patrolScript != null)
+                {
+                    patrolScript.ResumePatrol();
+                    Debug.Log("Player lost - Resuming patrol");
+                }
             }
         }
     }
 
-    private void HandleCombatMovement()
+    private bool HasLineOfSight()
     {
-        strafeTimer -= Time.deltaTime;
-        if (strafeTimer <= 0f)
+        Vector3 dirToPlayer = player.position - transform.position;
+        Ray ray = new Ray(transform.position + Vector3.up, dirToPlayer);
+        if (Physics.Raycast(ray, out RaycastHit hit, detectionRange))
         {
-            Vector3 right = transform.right;
-            strafeDirection = (UnityEngine.Random.value > 0.5f) ? right : -right;
-            strafeDirection += transform.forward * 0.2f;
-            strafeDirection.Normalize();
-            strafeTimer = strafeChangeInterval;
+            return hit.collider.CompareTag("Player");
         }
-
-        Vector3 targetPosition = transform.position + strafeDirection * strafeSpeed;
-        if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 1f, NavMesh.AllAreas))
-        {
-            agent.SetDestination(hit.position);
-        }
-    }
-
-    private bool IsPlayerInSight()
-    {
-        Vector3 dirToPlayer = (player.position - transform.position).normalized;
-        float angle = Vector3.Angle(transform.forward, dirToPlayer);
-
-        if (angle < fov / 2f)
-        {
-            Vector3 origin = transform.position + Vector3.up;
-            Vector3 destination = player.position + Vector3.up;
-
-            if (Physics.Raycast(origin, destination - origin, out RaycastHit hit, sightRange, ~obstructionMask))
-            {
-                Debug.DrawRay(origin, destination - origin, Color.red);
-                return hit.collider.CompareTag("Player");
-            }
-        }
-
         return false;
     }
 
     private void FacePlayer()
     {
+        // Smooth rotation, more suitable for VR
         Vector3 direction = (player.position - transform.position).normalized;
-        direction.y = 0;
+        direction.y = 0f;  // Keep the y-axis rotation fixed
 
-        if (direction != Vector3.zero)
+        Quaternion lookRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
+    }
+
+    private void HandleStrafeMovement()
+    {
+        agent.isStopped = false;
+
+        strafeTimer -= Time.deltaTime;
+        if (strafeTimer <= 0f)
         {
-            Quaternion rotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 5f);
+            Vector3 right = transform.right;
+            strafeDirection = (Random.value > 0.5f ? right : -right) + transform.forward * 0.2f;
+            strafeDirection.Normalize();
+            strafeTimer = strafeChangeInterval;
+        }
+
+        Vector3 targetPos = transform.position + strafeDirection * strafeSpeed;
+        if (NavMesh.SamplePosition(targetPos, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(hit.position);
         }
     }
 
-    public void Kill()
+    private void SendHaptics(float intensity, float duration)
     {
-        Debug.Log("Enemy killed.");
+        // Apply haptic feedback to the VR controllers
+        foreach (var device in devices)
+        {
+            if (device.TryGetHapticCapabilities(out HapticCapabilities capabilities) && capabilities.supportsImpulse)
+            {
+                device.SendHapticImpulse(0u, intensity, duration);
+            }
+        }
+    }
+
+    public void NotifyDeath()
+    {
         OnEnemyKilled?.Invoke();
-        Destroy(gameObject);
     }
 }
