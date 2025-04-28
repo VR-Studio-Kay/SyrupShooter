@@ -8528,6 +8528,10 @@ PrefabInstance:
       propertyPath: 'ragdollBodies.Array.data[10]'
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 3957415395923327711, guid: 38c1bcd7a91a6d041b8120186791ca85, type: 3}
+      propertyPath: hitSound
+      value: 
+      objectReference: {fileID: 8300000, guid: 6d3f736aeeaf57c438834c2f367ae14c, type: 3}
     - target: {fileID: 4261045446829972870, guid: 38c1bcd7a91a6d041b8120186791ca85, type: 3}
       propertyPath: 'patrolPoints.Array.data[0]'
       value: 
@@ -8777,13 +8781,13 @@ AudioSource:
   m_audioClip: {fileID: 8300000, guid: 272824100cdfb08419f33a1862b45cf1, type: 3}
   m_Resource: {fileID: 8300000, guid: 272824100cdfb08419f33a1862b45cf1, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.123
   m_Pitch: 1
   Loop: 1
   Mute: 0
   Spatialize: 1
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 193
   DopplerLevel: 1
   MinDistance: 1
   MaxDistance: 500
@@ -8821,7 +8825,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -8873,7 +8877,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 302e9b317feee904495127ab907f97fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  footstepClip: {fileID: 0}
+  footstepSource: {fileID: 738242182521766482}
   normalStepInterval: 0.5
   chaseStepInterval: 0.25
 --- !u!1 &761644779049357048

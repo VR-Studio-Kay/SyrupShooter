@@ -169,7 +169,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 5120
   impactEffect: {fileID: 5404444883436637729, guid: 8cb7a93ac9a093a4696155944ba76173, type: 3}
-  hitSound: {fileID: 0}
+  hitSound: {fileID: 8300000, guid: 1d78e5d2986809c47a7203451bef79d6, type: 3}
   knockbackForce: 30.3
   forceMode: 0
   useObjectPooling: 1
@@ -302,9 +302,9 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_audioClip: {fileID: 8300000, guid: 1d78e5d2986809c47a7203451bef79d6, type: 3}
+  m_Resource: {fileID: 8300000, guid: 1d78e5d2986809c47a7203451bef79d6, type: 3}
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
