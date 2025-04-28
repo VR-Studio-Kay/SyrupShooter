@@ -18,6 +18,8 @@ public class PlayerHealth : MonoBehaviour
     public float fadeDuration = 1f;
     public AudioClip damageSound;
     public AudioClip healSound;
+    public AudioClip deathSound;
+    public GameObject deathVFXPrefab;
     private AudioSource audioSource;
 
     [Header("Health UI")]
@@ -25,6 +27,7 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Game Over UI")]
     public GameObject gameOverCanvas;
+    public GameObject youDiedText; // NEW for Dark Souls effect
     public Button resetCheckpointButton;
     [SerializeField] private CanvasGroup fadeCanvasGroup;
     [SerializeField] private float fadeSpeed = 1f;
@@ -36,6 +39,9 @@ public class PlayerHealth : MonoBehaviour
     [Header("Disable on Death")]
     [SerializeField] private GameObject vrRig;
     [SerializeField] private GameObject locomotionSystem;
+
+    [Header("Animator (Optional)")]
+    public Animator animator; // Optional death animation
 
     [Header("Events")]
     public UnityEvent<int> onHealthChanged;
@@ -66,6 +72,9 @@ public class PlayerHealth : MonoBehaviour
 
         if (resetCheckpointButton != null)
             resetCheckpointButton.onClick.AddListener(RestartScene);
+
+        if (youDiedText != null)
+            youDiedText.SetActive(false);
     }
 
     public void TakeDamage(int amount)
@@ -161,32 +170,58 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("[PlayerHealth] Player has died.");
         onDeath?.Invoke();
 
+        // Play Death Animation
+        if (animator != null)
+            animator.SetTrigger("Die");
+
+        // Play Death Sound
+        if (deathSound != null && audioSource != null)
+            audioSource.PlayOneShot(deathSound);
+
+        // Spawn Death VFX
+        if (deathVFXPrefab != null)
+            Instantiate(deathVFXPrefab, transform.position, Quaternion.identity);
+
+        // Strong Haptic Feedback
+        TriggerHaptics(1.0f, 1.0f);
+
+        // Slow Down Time
+        Time.timeScale = 0.5f;
+        Invoke(nameof(ResetTimeScale), 2f);
+
         // Disable movement/input
         if (vrRig != null) vrRig.SetActive(false);
         if (locomotionSystem != null) locomotionSystem.SetActive(false);
 
-        // Fade to black + show game over
+        // Fade to black and show "You Died"
         StartCoroutine(FadeToBlackThenGameOver());
+    }
+
+    private void ResetTimeScale()
+    {
+        Time.timeScale = 1f;
     }
 
     private IEnumerator FadeToBlackThenGameOver()
     {
-        if (fadeCanvasGroup == null)
+        if (fadeCanvasGroup != null)
         {
-            if (gameOverCanvas != null)
-                gameOverCanvas.SetActive(true);
-            yield break;
+            float t = 0f;
+            while (t < 1f)
+            {
+                t += Time.deltaTime * fadeSpeed;
+                fadeCanvasGroup.alpha = t;
+                yield return null;
+            }
         }
 
-        float t = 0f;
-        while (t < 1f)
-        {
-            t += Time.deltaTime * fadeSpeed;
-            fadeCanvasGroup.alpha = t;
-            yield return null;
-        }
+        yield return new WaitForSecondsRealtime(1f);
 
-        yield return new WaitForSeconds(1f);
+        // Show "You Died" text
+        if (youDiedText != null)
+            youDiedText.SetActive(true);
+
+        yield return new WaitForSecondsRealtime(2f);
 
         if (gameOverCanvas != null)
             gameOverCanvas.SetActive(true);
@@ -194,6 +229,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void RestartScene()
     {
+        Time.timeScale = 1f; // Reset time scale in case it was slowed
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
     }
