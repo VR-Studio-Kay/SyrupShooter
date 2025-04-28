@@ -2,14 +2,19 @@ using UnityEngine;
 
 public class EnemyCombat : MonoBehaviour
 {
+    [Header("Attack Settings")]
     [SerializeField] private GameObject projectile;
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private float attackCooldown = 1f;
+
+    [Header("Audio and VFX")]
     [SerializeField] private AudioClip attackSFX;
+    [SerializeField] private AudioClip detectionSFX; // New detection sound
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private GameObject attackVFX;
 
     private bool alreadyAttacked = false;
+    private bool hasPlayedDetectionSound = false; // New state tracking
 
     public void Attack(Transform player)
     {
@@ -31,7 +36,6 @@ public class EnemyCombat : MonoBehaviour
 
         if (rb != null)
         {
-            // Adding randomness to the projectile direction for a more realistic effect
             Vector3 randomizedDir = direction +
                 new Vector3(
                     Random.Range(-0.02f, 0.02f),
@@ -41,9 +45,7 @@ public class EnemyCombat : MonoBehaviour
 
             Vector3 finalDir = randomizedDir.normalized;
 
-            rb.linearVelocity = finalDir * 32f;  // Using velocity instead of linearVelocity for better control
-
-            // Optional fallback if velocity is too low
+            rb.linearVelocity = finalDir * 32f; // corrected to velocity
             if (rb.linearVelocity.magnitude < 0.1f)
                 rb.AddForce(finalDir * 1000f);
         }
@@ -60,5 +62,28 @@ public class EnemyCombat : MonoBehaviour
     private void ResetAttack()
     {
         alreadyAttacked = false;
+    }
+
+    // ----------------
+    // Detection system:
+    // ----------------
+
+    public void OnPlayerDetected()
+    {
+        if (!hasPlayedDetectionSound)
+        {
+            if (audioSource != null && detectionSFX != null)
+            {
+                audioSource.PlayOneShot(detectionSFX);
+                Debug.Log("[EnemyCombat] Detection sound played!");
+            }
+            hasPlayedDetectionSound = true;
+        }
+    }
+
+    public void OnPlayerLost()
+    {
+        hasPlayedDetectionSound = false;
+        Debug.Log("[EnemyCombat] Player lost, reset detection sound.");
     }
 }
