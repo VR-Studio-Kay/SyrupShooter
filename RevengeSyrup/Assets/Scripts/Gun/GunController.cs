@@ -56,23 +56,33 @@ public class GunController : MonoBehaviour
 
     private void AimGunAtPlayer()
     {
-        // Get the direction to the player
-        Vector3 directionToPlayer = player.position - gunTransform.position;
+        // Direction to player on the horizontal plane only (ignore height differences if needed)
+        Vector3 targetDirection = player.position - gunTransform.position;
+        targetDirection.y = 0; // Keep gun rotation flat (no vertical aiming)
 
-        // Calculate the desired rotation to face the player
-        Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
+        if (targetDirection == Vector3.zero)
+            return;
 
-        // Clamp the rotation to only allow up to the max angle
-        Vector3 eulerRotation = targetRotation.eulerAngles;
-        eulerRotation.x = Mathf.Clamp(eulerRotation.x, -maxGunAngle, maxGunAngle);
-        eulerRotation.z = 0; // Keep the gun rotation only on the y-axis for proper orientation
+        // Find the rotation towards the player
+        Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
 
-        Quaternion clampedRotation = Quaternion.Euler(eulerRotation);
+        // Clamp rotation based on allowed angle range
+        float angleDifference = Quaternion.Angle(gunTransform.rotation, targetRotation);
 
-        // Smoothly rotate the gun towards the player
-        gunTransform.rotation = Quaternion.RotateTowards(gunTransform.rotation, clampedRotation, gunRotationSpeed * Time.deltaTime);
+        if (angleDifference <= maxGunAngle)
+        {
+            // If within allowed angle, rotate normally
+            gunTransform.rotation = Quaternion.RotateTowards(gunTransform.rotation, targetRotation, gunRotationSpeed * Time.deltaTime);
+        }
+        else
+        {
+            // If outside allowed angle, don't rotate further
+            Vector3 limitedDirection = Vector3.RotateTowards(gunTransform.forward, targetDirection, Mathf.Deg2Rad * maxGunAngle, 0.0f);
+            Quaternion limitedRotation = Quaternion.LookRotation(limitedDirection);
+            gunTransform.rotation = Quaternion.RotateTowards(gunTransform.rotation, limitedRotation, gunRotationSpeed * Time.deltaTime);
+        }
 
-        // Ensure the spawn point follows the gun rotation
+        // Update spawn point rotation
         spawnPoint.rotation = gunTransform.rotation;
     }
 

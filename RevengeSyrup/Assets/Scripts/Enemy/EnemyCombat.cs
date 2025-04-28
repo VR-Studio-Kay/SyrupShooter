@@ -41,10 +41,10 @@ public class EnemyCombat : MonoBehaviour
 
             Vector3 finalDir = randomizedDir.normalized;
 
-            rb.velocity = finalDir * 32f;  // Using velocity instead of linearVelocity for better control
+            rb.linearVelocity = finalDir * 32f;  // Using velocity instead of linearVelocity for better control
 
             // Optional fallback if velocity is too low
-            if (rb.velocity.magnitude < 0.1f)
+            if (rb.linearVelocity.magnitude < 0.1f)
                 rb.AddForce(finalDir * 1000f);
         }
 
