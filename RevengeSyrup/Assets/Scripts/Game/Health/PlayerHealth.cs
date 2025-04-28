@@ -27,7 +27,7 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("Game Over UI")]
     public GameObject gameOverCanvas;
-    public GameObject youDiedText; // NEW for Dark Souls effect
+    public GameObject youDiedText; // For Dark Souls effect
     public Button resetCheckpointButton;
     [SerializeField] private CanvasGroup fadeCanvasGroup;
     [SerializeField] private float fadeSpeed = 1f;
@@ -41,7 +41,7 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private GameObject locomotionSystem;
 
     [Header("Animator (Optional)")]
-    public Animator animator; // Optional death animation
+    public Animator animator;
 
     [Header("Events")]
     public UnityEvent<int> onHealthChanged;
@@ -110,22 +110,25 @@ public class PlayerHealth : MonoBehaviour
             healthBarSlider.value = CalculateHealthPercentage();
 
         onHealthChanged?.Invoke(currentHealth);
+
+        if (healSound != null && audioSource != null)
+            PlaySoundWithPitchVariation(healSound, 1.0f, 1.2f);
     }
 
     private void TriggerFeedback()
     {
-        // Blood screen
+        // Blood screen effect
         if (bloodScreenPrefab != null)
         {
             bloodScreenCanvasGroup.alpha = 1f;
             StartCoroutine(FadeBloodScreen());
         }
 
-        // Audio
+        // Play random pitch damage sound
         if (damageSound != null && audioSource != null)
-            audioSource.PlayOneShot(damageSound);
+            PlaySoundWithPitchVariation(damageSound, 0.9f, 1.1f);
 
-        // Haptics
+        // Haptic feedback
         TriggerHaptics();
     }
 
@@ -170,30 +173,24 @@ public class PlayerHealth : MonoBehaviour
         Debug.Log("[PlayerHealth] Player has died.");
         onDeath?.Invoke();
 
-        // Play Death Animation
         if (animator != null)
             animator.SetTrigger("Die");
 
-        // Play Death Sound
+        // Death sound with random pitch
         if (deathSound != null && audioSource != null)
-            audioSource.PlayOneShot(deathSound);
+            PlaySoundWithPitchVariation(deathSound, 0.85f, 1.0f);
 
-        // Spawn Death VFX
         if (deathVFXPrefab != null)
             Instantiate(deathVFXPrefab, transform.position, Quaternion.identity);
 
-        // Strong Haptic Feedback
         TriggerHaptics(1.0f, 1.0f);
 
-        // Slow Down Time
         Time.timeScale = 0.5f;
         Invoke(nameof(ResetTimeScale), 2f);
 
-        // Disable movement/input
         if (vrRig != null) vrRig.SetActive(false);
         if (locomotionSystem != null) locomotionSystem.SetActive(false);
 
-        // Fade to black and show "You Died"
         StartCoroutine(FadeToBlackThenGameOver());
     }
 
@@ -217,7 +214,6 @@ public class PlayerHealth : MonoBehaviour
 
         yield return new WaitForSecondsRealtime(1f);
 
-        // Show "You Died" text
         if (youDiedText != null)
             youDiedText.SetActive(true);
 
@@ -229,8 +225,18 @@ public class PlayerHealth : MonoBehaviour
 
     public void RestartScene()
     {
-        Time.timeScale = 1f; // Reset time scale in case it was slowed
+        Time.timeScale = 1f;
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
+    }
+
+    // NEW: Sound with random pitch variation
+    private void PlaySoundWithPitchVariation(AudioClip clip, float minPitch = 0.95f, float maxPitch = 1.05f)
+    {
+        if (clip == null || audioSource == null) return;
+
+        audioSource.pitch = Random.Range(minPitch, maxPitch);
+        audioSource.PlayOneShot(clip);
+        audioSource.pitch = 1f; // Reset back to normal after playing
     }
 }

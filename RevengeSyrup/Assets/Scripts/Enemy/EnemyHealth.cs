@@ -15,9 +15,10 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("Damage Feedback")]
     [SerializeField] private AudioClip hitSound;
+    [SerializeField] private AudioClip deathSound; // NEW death sound
     [SerializeField] private ParticleSystem hitEffect;
-    [SerializeField] private Animator animator; // Optional if you want animations
-    [SerializeField] private string flinchTriggerName = "Flinch"; // Name of the trigger parameter in Animator
+    [SerializeField] private Animator animator;
+    [SerializeField] private string flinchTriggerName = "Flinch";
 
     private int maxHealth;
     private bool isDead = false;
@@ -64,15 +65,12 @@ public class EnemyHealth : MonoBehaviour
 
     private void PlayHitFeedback()
     {
-        // Sound
         if (hitSound != null && audioSource != null)
             audioSource.PlayOneShot(hitSound);
 
-        // Particle
         if (hitEffect != null)
             Instantiate(hitEffect, transform.position + Vector3.up * 1f, Quaternion.identity);
 
-        // Animation
         if (animator != null && !string.IsNullOrEmpty(flinchTriggerName))
             animator.SetTrigger(flinchTriggerName);
     }
@@ -93,7 +91,6 @@ public class EnemyHealth : MonoBehaviour
             rb.AddForce(pushDirection * staggerPushForce, ForceMode.Impulse);
         }
 
-        // Random stagger time between min and max
         float staggerDuration = Random.Range(staggerDurationMin, staggerDurationMax);
         Invoke(nameof(ResumeMovement), staggerDuration);
     }
@@ -124,6 +121,10 @@ public class EnemyHealth : MonoBehaviour
             ragdoll.ToggleRagdoll(true);
             ragdoll.AddForce(-transform.forward + Vector3.up, 3f);
         }
+
+        // NEW: Play death sound
+        if (deathSound != null && audioSource != null)
+            audioSource.PlayOneShot(deathSound);
 
         Destroy(gameObject, 3f);
     }
